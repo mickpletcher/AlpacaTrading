@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #080c0f;
+    --panel:    #0d1318;
+    --border:   #1a2530;
+    --accent:   #00e5ff;
+    --green:    #00ff88;
+    --red:      #ff3355;
+    --yellow:   #ffcc00;
+    --text:     #c8d8e8;
+    --muted:    #4a6070;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-head: 'Bebas Neue', cursive;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    min-height: 100vh;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, #0f1820 39px, #0f1820 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, #0f1820 39px, #0f1820 40px);
+  }
+
+  .scanline {
+    position: fixed; top: 0; left: 0; right: 0; height: 2px;
+    background: rgba(0,229,255,0.15);
+    animation: scan 4s linear infinite;
+    pointer-events: none; z-index: 999;
+  }
+  @keyframes scan { from { top: 0; } to { top: 100vh; } }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13,19,24,0.95);
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .logo {
+    font-family: var(--font-head);
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(0,229,255,0.4);
+  }
+
+  .header-stats {
+    display: flex; gap: 32px;
+  }
+
+  .stat-pill {
+    display: flex; flex-direction: column; align-items: flex-end;
+  }
+
+  .stat-pill .label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .stat-pill .value {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .positive { color: var(--green); text-shadow: 0 0 10px rgba(0,255,136,0.3); }
+  .negative { color: var(--red);   text-shadow: 0 0 10px rgba(255,51,85,0.3); }
+  .neutral  { color: var(--accent); }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+
+  .tab {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab.active, .tab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,255,0.05);
+  }
+
+  .panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* FORM */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-group label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.1);
+  }
+
+  .form-group select option { background: #0d1318; }
+
+  .form-full { grid-column: 1 / -1; }
+
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    color: var(--accent);
+  }
+  .btn-primary:hover {
+    background: rgba(0,229,255,0.18);
+    box-shadow: 0 0 20px rgba(0,229,255,0.2);
+  }
+
+  .btn-danger {
+    border-color: var(--red);
+    background: transparent;
+    color: var(--red);
+    font-size: 10px;
+    padding: 4px 10px;
+  }
+  .btn-danger:hover { background: rgba(255,51,85,0.1); }
+
+  .btn-export {
+    border-color: var(--yellow);
+    background: transparent;
+    color: var(--yellow);
+  }
+  .btn-export:hover { background: rgba(255,204,0,0.1); }
+
+  /* TRADES TABLE */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(26,37,48,0.5);
+    white-space: nowrap;
+  }
+
+  tr:hover td { background: rgba(0,229,255,0.03); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    border: 1px solid;
+  }
+
+  .badge-win  { border-color: var(--green); color: var(--green); }
+  .badge-loss { border-color: var(--red);   color: var(--red); }
+  .badge-open { border-color: var(--yellow); color: var(--yellow); }
+  .badge-be   { border-color: var(--muted); color: var(--muted); }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .stat-card .sc-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-card .sc-value {
+    font-family: var(--font-head);
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  /* AI PROMPT BOX */
+  .prompt-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    color: var(--text);
+    margin-top: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    margin-top: 8px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .close-btn-cell button { font-size: 10px; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 32px; right: 32px;
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 12px 20px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 999;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<header>
+  <div class="logo">TRADE//JOURNAL</div>
+  <div class="header-stats" id="header-stats">
+    <div class="stat-pill"><span class="label">Total P&L</span><span class="value neutral" id="hdr-pnl">—</span></div>
+    <div class="stat-pill"><span class="label">Win Rate</span><span class="value neutral" id="hdr-wr">—</span></div>
+    <div class="stat-pill"><span class="label">Trades</span><span class="value neutral" id="hdr-total">—</span></div>
+    <div class="stat-pill"><span class="label">Streak</span><span class="value neutral" id="hdr-streak">—</span></div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('log')">LOG TRADE</button>
+    <button class="tab" onclick="switchTab('trades')">TRADE HISTORY</button>
+    <button class="tab" onclick="switchTab('stats')">ANALYTICS</button>
+    <button class="tab" onclick="switchTab('ai')">AI ANALYSIS</button>
+  </div>
+
+  <!-- LOG TRADE -->
+  <div class="panel active" id="panel-log">
+    <div class="section-title">LOG NEW TRADE</div>
+    <form id="trade-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="f-date" required>
+        </div>
+        <div class="form-group">
+          <label>Ticker</label>
+          <input type="text" id="f-ticker" placeholder="SPY" required>
+        </div>
+        <div class="form-group">
+          <label>Direction</label>
+          <select id="f-direction">
+            <option>LONG</option>
+            <option>SHORT</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Qty (shares)</label>
+          <input type="number" id="f-qty" min="1" value="1" required>
+        </div>
+        <div class="form-group">
+          <label>Entry Price</label>
+          <input type="number" id="f-entry" step="0.01" placeholder="0.00" required>
+        </div>
+        <div class="form-group">
+          <label>Exit Price (blank = open)</label>
+          <input type="number" id="f-exit" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Stop Loss</label>
+          <input type="number" id="f-stop" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Target</label>
+          <input type="number" id="f-target" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Setup</label>
+          <select id="f-setup">
+            <option value="">— Select —</option>
+            <option>EMA Crossover</option>
+            <option>VWAP Retest</option>
+            <option>Opening Range Breakout</option>
+            <option>Support/Resistance</option>
+            <option>Gap Fill</option>
+            <option>Momentum</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Timeframe</label>
+          <select id="f-timeframe">
+            <option>1m</option>
+            <option>5m</option>
+            <option>15m</option>
+            <option>30m</option>
+            <option>1h</option>
+            <option>Daily</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Emotional State</label>
+          <select id="f-emotion">
+            <option value="">— Select —</option>
+            <option>Calm / Focused</option>
+            <option>Anxious</option>
+            <option>FOMO</option>
+            <option>Revenge Trading</option>
+            <option>Overconfident</option>
+            <option>Hesitant</option>
+            <option>Neutral</option>
+          </select>
+        </div>
+        <div class="form-group form-full">
+          <label>Mistake Made (if any)</label>
+          <input type="text" id="f-mistake" placeholder="e.g. Chased entry, moved stop, sized too large...">
+        </div>
+        <div class="form-group form-full">
+          <label>Lesson Learned</label>
+          <input type="text" id="f-lesson" placeholder="e.g. Wait for pullback to EMA before entry...">
+        </div>
+        <div class="form-group form-full">
+          <label>Notes</label>
+          <textarea id="f-notes" rows="2" placeholder="Market context, catalyst, chart notes..."></textarea>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">▶ SUBMIT TRADE</button>
+    </form>
+  </div>
+
+  <!-- TRADE HISTORY -->
+  <div class="panel" id="panel-trades">
+    <div class="toolbar">
+      <div class="section-title">TRADE HISTORY</div>
+      <button class="btn btn-export" onclick="exportCSV()">↓ EXPORT CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Ticker</th><th>Dir</th><th>Qty</th>
+            <th>Entry</th><th>Exit</th><th>P&L</th><th>Result</th>
+            <th>Setup</th><th>Emotion</th><th>Mistake</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="trades-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="panel" id="panel-stats">
+    <div class="section-title">ANALYTICS</div>
+    <div class="stats-grid" id="stats-grid"></div>
+    <div id="setup-table"></div>
+  </div>
+
+  <!-- AI ANALYSIS -->
+  <div class="panel" id="panel-ai">
+    <div class="section-title">AI ANALYSIS PROMPT</div>
+    <p style="color:var(--muted); font-family:var(--font-mono); font-size:12px; margin-bottom:16px;">
+      Copy the generated prompt below and paste it into Claude for a personalized coaching analysis of your trades.
+    </p>
+    <button class="btn btn-primary" onclick="loadAIPrompt()">▶ GENERATE PROMPT</button>
+    <pre class="prompt-box" id="ai-prompt">Click "Generate Prompt" to create your AI coaching analysis request based on your trade history.</pre>
+    <button class="btn btn-export" style="margin-top:12px;" onclick="copyPrompt()">⎘ COPY TO CLIPBOARD</button>
+  </div>
+</div>
+
+<div id="toast">Trade logged successfully.</div>
+
+<script>
+const API = "";
+
+// ─── Tab switching ───
+function switchTab(name) {
+  document.querySelectorAll(".tab").forEach((t,i) => {
+    const panels = ["log","trades","stats","ai"];
+    t.classList.toggle("active", panels[i] === name);
+  });
+  document.querySelectorAll(".panel").forEach(p => {
+    p.classList.toggle("active", p.id === "panel-" + name);
+  });
+  if (name === "trades") loadTrades();
+  if (name === "stats")  loadStats();
+}
+
+// ─── Toast ───
+function toast(msg, isError=false) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.style.borderColor = isError ? "var(--red)" : "var(--accent)";
+  el.style.color = isError ? "var(--red)" : "var(--accent)";
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+// ─── Set today's date ───
+document.getElementById("f-date").value = new Date().toISOString().split("T")[0];
+
+// ─── Submit trade ───
+document.getElementById("trade-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const payload = {
+    date:      document.getElementById("f-date").value,
+    ticker:    document.getElementById("f-ticker").value,
+    direction: document.getElementById("f-direction").value,
+    qty:       document.getElementById("f-qty").value,
+    entry:     document.getElementById("f-entry").value,
+    exit:      document.getElementById("f-exit").value || null,
+    stop_loss: document.getElementById("f-stop").value || null,
+    target:    document.getElementById("f-target").value || null,
+    setup:     document.getElementById("f-setup").value,
+    timeframe: document.getElementById("f-timeframe").value,
+    emotion:   document.getElementById("f-emotion").value,
+    mistake:   document.getElementById("f-mistake").value,
+    lesson:    document.getElementById("f-lesson").value,
+    notes:     document.getElementById("f-notes").value,
+  };
+
+  const res = await fetch("/api/trades", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    const pnl = data.pnl !== null ? ` | P&L: $${data.pnl > 0 ? "+" : ""}${data.pnl}` : "";
+    toast(`${data.result}${pnl}`);
+    e.target.reset();
+    document.getElementById("f-date").value = new Date().toISOString().split("T")[0];
+    loadHeaderStats();
+  } else {
+    toast("Error saving trade.", true);
+  }
+});
+
+// ─── Load trades table ───
+async function loadTrades() {
+  const res = await fetch("/api/trades");
+  const trades = await res.json();
+  const tbody = document.getElementById("trades-body");
+
+  tbody.innerHTML = trades.map(t => {
+    const pnl = t.pnl !== null
+      ? `<span class="${t.pnl >= 0 ? "positive" : "negative"}">${t.pnl >= 0 ? "+" : ""}$${t.pnl.toFixed(2)}</span>`
+      : "<span style='color:var(--muted)'>OPEN</span>";
+    const badge = t.result === "WIN"  ? "badge-win"
+                : t.result === "LOSS" ? "badge-loss"
+                : t.result === "OPEN" ? "badge-open"
+                : "badge-be";
+    return `<tr>
+      <td>${t.date}</td>
+      <td><strong>${t.ticker}</strong></td>
+      <td style="color:${t.direction==='LONG'?'var(--green)':'var(--red)'}">${t.direction}</td>
+      <td>${t.qty}</td>
+      <td>$${parseFloat(t.entry).toFixed(2)}</td>
+      <td>${t.exit ? "$"+parseFloat(t.exit).toFixed(2) : "—"}</td>
+      <td>${pnl}</td>
+      <td><span class="badge ${badge}">${t.result}</span></td>
+      <td>${t.setup || "—"}</td>
+      <td style="color:${t.emotion?.includes('FOMO')||t.emotion?.includes('Revenge')?"var(--red)":"inherit"}">${t.emotion || "—"}</td>
+      <td style="color:var(--muted); max-width:160px; overflow:hidden; text-overflow:ellipsis">${t.mistake || "—"}</td>
+      <td><button class="btn btn-danger" onclick="deleteTrade(${t.id})">✕</button></td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:40px;">No trades yet. Log your first trade.</td></tr>`;
+}
+
+async function deleteTrade(id) {
+  if (!confirm("Delete this trade?")) return;
+  await fetch("/api/trades/" + id, { method: "DELETE" });
+  loadTrades();
+  loadHeaderStats();
+  toast("Trade deleted.");
+}
+
+// ─── Load stats ───
+async function loadStats() {
+  const res = await fetch("/api/stats");
+  const data = await res.json();
+  const grid = document.getElementById("stats-grid");
+
+  if (data.message) {
+    grid.innerHTML = `<p style="color:var(--muted);font-family:var(--font-mono)">${data.message}</p>`;
+    return;
+  }
+
+  const pnlColor = data.total_pnl >= 0 ? "var(--green)" : "var(--red)";
+  const pnlSign  = data.total_pnl >= 0 ? "+" : "";
+  const pfColor  = (parseFloat(data.profit_factor) || 0) >= 1 ? "var(--green)" : "var(--red)";
+
+  grid.innerHTML = [
+    ["TOTAL P&L",      `<span style="color:${pnlColor}">${pnlSign}$${data.total_pnl.toFixed(2)}</span>`],
+    ["WIN RATE",       `<span style="color:${data.win_rate>=50?'var(--green)':'var(--red)'}">${data.win_rate}%</span>`],
+    ["TOTAL TRADES",   data.total_trades],
+    ["AVG WIN",        `<span class="positive">+$${data.avg_win.toFixed(2)}</span>`],
+    ["AVG LOSS",       `<span class="negative">$${data.avg_loss.toFixed(2)}</span>`],
+    ["PROFIT FACTOR",  `<span style="color:${pfColor}">${data.profit_factor}</span>`],
+    ["STREAK",         `<span style="color:${data.current_streak.type==='WIN'?'var(--green)':'var(--red)'}">${data.current_streak.count} ${data.current_streak.type}</span>`],
+  ].map(([label, val]) => `
+    <div class="stat-card">
+      <div class="sc-label">${label}</div>
+      <div class="sc-value">${val}</div>
+    </div>
+  `).join("");
+
+  // Setup performance table
+  const setups = data.setup_performance;
+  const rows = Object.entries(setups).map(([name, s]) => {
+    const wr = s.wins + s.losses > 0 ? (s.wins / (s.wins + s.losses) * 100).toFixed(0) : "—";
+    const pnlColor = s.pnl >= 0 ? "var(--green)" : "var(--red)";
+    return `<tr>
+      <td>${name}</td>
+      <td><span class="positive">${s.wins}</span></td>
+      <td><span class="negative">${s.losses}</span></td>
+      <td>${wr}%</td>
+      <td style="color:${pnlColor}">${s.pnl >= 0 ? "+" : ""}$${s.pnl.toFixed(2)}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("setup-table").innerHTML = `
+    <div class="section-title" style="margin-top:32px">SETUP PERFORMANCE</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Setup</th><th>Wins</th><th>Losses</th><th>Win%</th><th>Net P&L</th></tr></thead>
+      <tbody>${rows || "<tr><td colspan='5' style='color:var(--muted)'>No data</td></tr>"}</tbody>
+    </table></div>
+  `;
+}
+
+// ─── Header stats ───
+async function loadHeaderStats() {
+  const res = await fetch("/api/stats");
+  const data = await res.json();
+  if (data.message) return;
+
+  const pnl  = document.getElementById("hdr-pnl");
+  pnl.textContent = `${data.total_pnl >= 0 ? "+" : ""}$${data.total_pnl.toFixed(2)}`;
+  pnl.className = "value " + (data.total_pnl >= 0 ? "positive" : "negative");
+
+  const wr = document.getElementById("hdr-wr");
+  wr.textContent = `${data.win_rate}%`;
+  wr.className = "value " + (data.win_rate >= 50 ? "positive" : "negative");
+
+  document.getElementById("hdr-total").textContent = data.total_trades;
+
+  const streak = document.getElementById("hdr-streak");
+  streak.textContent = `${data.current_streak.count} ${data.current_streak.type}`;
+  streak.className = "value " + (data.current_streak.type === "WIN" ? "positive" : "negative");
+}
+
+// ─── AI Prompt ───
+async function loadAIPrompt() {
+  const res  = await fetch("/api/ai_prompt");
+  const data = await res.json();
+  document.getElementById("ai-prompt").textContent = data.prompt;
+}
+
+function copyPrompt() {
+  const text = document.getElementById("ai-prompt").textContent;
+  navigator.clipboard.writeText(text).then(() => toast("Prompt copied to clipboard!"));
+}
+
+function exportCSV() {
+  window.location.href = "/api/export";
+}
+
+// Init
+loadHeaderStats();
+</script>
+</body>
+</html>
