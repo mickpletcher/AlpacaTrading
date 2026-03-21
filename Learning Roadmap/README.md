@@ -1,7 +1,9 @@
 ## Learning Roadmap (Parallel to Using These Tools)
 
 **Month 1 — Foundation**
-- Read both books: *How to Day Trade for a Living* (Aziz) + *How to Day Trade: The Plain Truth*
+- Read both books:
+  - *How to Day Trade for a Living* (Aziz)
+  - *How to Day Trade: The Plain Truth*
 - Set up paper trading account
 - Run backtester on 3-5 different stocks and timeframes
 - Start journaling hypothetical trades (no real trades yet)
