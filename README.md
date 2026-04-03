@@ -58,6 +58,7 @@ Why it is still not the same as live trading:
 | `Journal/` | Trade review, analytics, CSV export, and HTML reporting | Anyone reviewing results | `trades.db`, `trade_journal.csv`, `report.html` |
 | `Learning Roadmap/` | Guided learning path from basics to multi strategy workflows | Complete beginners | study plan, next steps, example prompts |
 | `Scheduler/` | Automation entry points for scheduled runs | Windows and shell users | `Journal/scheduler_log.txt` |
+| `rsi_macd_bot/` | Fully automated RSI plus MACD signal bot using Alpaca market orders | Intermediate and technical users | `trades.log`, market and stop orders |
 | `Tests/` | Fast validation of strategy logic and API connectivity | Contributors and careful operators | pytest pass, fail, or skip results |
 
 ## Repository Structure
@@ -96,6 +97,16 @@ Trading/
 |   |-- README.md               # Scheduling guide for Windows and shell users
 |   |-- run_strategy.ps1        # Windows scheduler launcher for Alpaca/paper_trade.py
 |   |-- run_strategy.sh         # Shell scheduler launcher for Alpaca/paper_trade.py
+|-- rsi_macd_bot/
+|   |-- README.md               # RSI plus MACD bot guide
+|   |-- config.py               # Bot settings for symbols, indicators, and risk limits
+|   |-- data_fetcher.py         # Historical bar retrieval helpers
+|   |-- indicators.py           # RSI plus MACD calculations and signal rules
+|   |-- order_manager.py        # Position checks, sizing, market orders, and stop orders
+|   |-- logger.py               # Rotating signal and order event logger
+|   |-- bot.py                  # Main scan loop that runs every 5 minutes
+|   |-- .env.example            # Bot specific environment template
+|   |-- requirements.txt        # Bot specific dependencies
 |-- Tests/
 |   |-- README.md               # Test guide and interpretation help
 |   |-- test_connection.py      # Live Alpaca connectivity checks using .env credentials
@@ -228,6 +239,7 @@ Fill in the values you need.
 | `CIRCUIT_BREAKER_RATE_LIMIT_PAUSE_SECONDS` | Optional | `120` | How long to pause after repeated rate limit failures |
 | `CIRCUIT_BREAKER_SERVER_ERROR_PAUSE_SECONDS` | Optional | `300` | How long to pause after request failures or server issues |
 | `CIRCUIT_BREAKER_TIMEOUT_SECONDS` | Optional | `15` | HTTP timeout used by safety checks |
+| `PAPER` | Optional | `true` | Used by `rsi_macd_bot/bot.py` to choose paper mode when true and live mode when false |
 | `ANTHROPIC_API_KEY` | No | `sk-ant-...` | Reserved for optional external AI analysis workflows. Current journal code generates prompts locally and does not call Anthropic directly |
 
 Example starter `.env`:
@@ -242,6 +254,7 @@ ALPACA_BOT_QTY=1
 ALPACA_BOT_EMA_FAST=9
 ALPACA_BOT_EMA_SLOW=21
 CIRCUIT_BREAKER_MAX_CONSECUTIVE_LOSSES=3
+PAPER=true
 ```
 
 ## How to Create an Alpaca Paper Trading Account
@@ -384,6 +397,36 @@ Expected success signs:
 - the bot logs signals as price history grows
 - any blocked trade explains why it was blocked
 
+## Run the RSI Plus MACD Signal Bot
+
+This module runs a fully automated scan and order loop. It checks each symbol every 5 minutes during market hours and places orders when RSI and MACD both confirm.
+
+Install dependencies:
+
+```powershell
+python -m pip install -r .\rsi_macd_bot\requirements.txt
+```
+
+Configure environment values:
+
+```powershell
+Copy-Item .\rsi_macd_bot\.env.example .env
+notepad .env
+```
+
+Run:
+
+```powershell
+python .\rsi_macd_bot\bot.py
+```
+
+Expected success signs:
+
+- symbols in the watchlist are scanned each cycle
+- signals and actions are written to `rsi_macd_bot/trades.log`
+- buy orders are skipped for symbols that already have open positions
+- stop loss orders are submitted after buy fills
+
 ## How the Scheduler Works
 
 The scheduler scripts do three main things:
@@ -450,6 +493,7 @@ What a skipped test means:
 | `Python was not found in PATH` | Python is not installed or virtual environment is not active | activate `.venv` or install Python, then retry |
 | PowerShell blocks `.ps1` scripts | execution policy prevents script launch | run `Set-ExecutionPolicy -Scope Process Bypass` in the current shell |
 | journal page opens but data is missing | the app has not refreshed after a strategy wrote new CSV rows | reload the page so the journal can sync the latest CSV rows into SQLite |
+| RSI plus MACD bot exits immediately | `.env` is missing credentials or `PAPER` value is invalid | set `ALPACA_API_KEY`, `ALPACA_SECRET_KEY`, and use `PAPER=true` for testing |
 | tests are skipped | credentials are not set | add keys to `.env` if you want live connectivity tests |
 | `No bars returned` in backtests | symbol or date range does not have data | try a different symbol or broader date range |
 | strategy logs say trading is blocked | circuit breaker detected losses or API problems | inspect `Journal/circuit_log.txt` and fix the underlying issue before retrying |
@@ -504,6 +548,7 @@ You are in good shape when all of the following are true:
 - `python .\Alpaca\alpaca_paper.py status` shows account values from the paper account
 - the journal app opens at `http://localhost:5000`
 - `python .\Journal\analyze_journal.py` writes `Journal/report.html`
+- `python .\rsi_macd_bot\bot.py` writes signal and order events to `rsi_macd_bot/trades.log`
 - scheduler runs create entries in `Journal/scheduler_log.txt`
 
 ## Screenshots
@@ -532,6 +577,7 @@ These are important implementation details that new users should know today.
 - add a top level bootstrap script for first time setup
 - replace the screenshot placeholders with real captured output files
 - add richer test coverage for scheduler behavior
+- add synthetic and integration tests for `rsi_macd_bot`
 - add more environment driven configuration for live strategy runners
 - add a dry run mode for order placement scripts
 

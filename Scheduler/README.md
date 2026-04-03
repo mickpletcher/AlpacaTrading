@@ -108,6 +108,14 @@ Examples:
 
 Use those when you want a scheduled launch for a specific strategy instead of the generic paper trading entry point.
 
+For the fully automated RSI plus MACD bot, schedule this entry point directly:
+
+```text
+rsi_macd_bot/bot.py
+```
+
+The bot setup guide is in `rsi_macd_bot/README.md` and runtime logs are written to `rsi_macd_bot/trades.log`.
+
 ### Gap momentum note
 
 Gap momentum is time window sensitive. The PowerShell wrapper documents a two task pattern:

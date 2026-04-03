@@ -1,0 +1,5 @@
+alpaca-py==0.43.2
+pandas==3.0.2
+pandas-ta==0.4.71b0
+python-dotenv==1.2.2
+schedule==1.2.2

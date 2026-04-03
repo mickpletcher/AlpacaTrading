@@ -72,6 +72,72 @@ pytest .\Tests\test_rsi_stack.py -v
 pytest .\Tests\test_connection.py -v
 ```
 
+## Manual Validation for RSI Plus MACD Bot
+
+Automated tests for `rsi_macd_bot` are not in this repo yet, so use this manual checklist after any bot logic changes.
+
+### Quick environment check
+
+```powershell
+python -c "import importlib.util as u;mods=['alpaca','pandas','schedule','dotenv','pandas_ta'];print({m: bool(u.find_spec(m)) for m in mods})"
+```
+
+Expected output:
+
+```text
+{'alpaca': True, 'pandas': True, 'schedule': True, 'dotenv': True, 'pandas_ta': True}
+```
+
+### Syntax check
+
+```powershell
+python -m compileall .\rsi_macd_bot
+```
+
+Expected output:
+
+```text
+Compiling '.\\rsi_macd_bot\\bot.py'...
+...
+```
+
+### Dry startup check in paper mode
+
+1. ensure `.env` has valid paper credentials and `PAPER=true`
+2. run `python .\rsi_macd_bot\bot.py`
+3. let it run for one or two scan cycles
+4. stop with `Ctrl+C`
+
+Expected behavior:
+
+- bot starts without crashing
+- market closed cycles log as skip events outside market hours
+- open positions summary is logged on shutdown
+- no unhandled traceback appears
+
+### Log verification
+
+Check `rsi_macd_bot/trades.log` for rows matching the expected format:
+
+```text
+[TIMESTAMP] SYMBOL | SIGNAL | ACTION | QTY | PRICE | RSI | MACD_HIST
+```
+
+Confirm at least these action patterns appear during test runs:
+
+- `NO_ACTION`
+- `SKIP_ALREADY_OPEN` or `SKIP_NO_POSITION`
+- `ORDER_PLACED` when signal conditions and account state permit orders
+
+### Risk guard verification
+
+Before unattended runs, confirm:
+
+1. `PAPER=true`
+2. `POSITION_SIZE_PCT` is small enough for safe paper testing
+3. `MAX_OPEN_TRADES` is set to a conservative value
+4. stop loss submissions are present in logs after buy fills
+
 ## Example Usage
 
 ### Example 1: Safe first test run without Alpaca credentials

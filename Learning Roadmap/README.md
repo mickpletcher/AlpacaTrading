@@ -133,6 +133,27 @@ python .\Backtesting\strategies\backtest_gap_momentum.py --symbol SPY --start 20
 python .\Backtesting\strategies\live_gap_momentum.py
 ```
 
+### Phase 5: RSI plus MACD automation
+
+Why this phase is late:
+
+- this bot is fully automated and submits orders without manual approval
+- it combines signal logic with order routing and risk controls
+- mistakes can execute immediately if setup is wrong
+
+Run it:
+
+```powershell
+python -m pip install -r .\rsi_macd_bot\requirements.txt
+python .\rsi_macd_bot\bot.py
+```
+
+What to verify first:
+
+- `.env` has valid keys and `PAPER=true`
+- `rsi_macd_bot/trades.log` shows understandable signal and action rows
+- no API errors are repeating before you leave it running unattended
+
 ## Suggested Month by Month Path
 
 ### Month 1
