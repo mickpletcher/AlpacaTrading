@@ -1,0 +1,2 @@
+date,symbol,side,qty,entry_price,exit_price,pnl,notes
+2026-01-02,AAPL,BUY,10,200.00,202.50,25.00,Sample paper trade

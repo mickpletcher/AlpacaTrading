@@ -38,6 +38,40 @@ param(
     [int]$Qty
 )
 
+function Import-DotEnv {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    if (-not (Test-Path $Path)) {
+        return
+    }
+
+    foreach ($line in Get-Content -Path $Path) {
+        $trimmed = $line.Trim()
+        if (-not $trimmed -or $trimmed.StartsWith("#")) {
+            continue
+        }
+
+        $parts = $trimmed -split "=", 2
+        if ($parts.Count -ne 2) {
+            continue
+        }
+
+        $name = $parts[0].Trim()
+        $value = $parts[1].Trim()
+        if ($value -match "^(.*?)(\s+#.*)$") {
+            $value = $matches[1].TrimEnd()
+        }
+
+        [System.Environment]::SetEnvironmentVariable($name, $value, "Process")
+    }
+}
+
+$repoRoot = Split-Path $PSScriptRoot -Parent
+Import-DotEnv -Path (Join-Path $repoRoot ".env")
+
 # ─────────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────────
@@ -71,6 +105,53 @@ function Get-AlpacaHeaders {
         "APCA-API-KEY-ID"     = $script:AlpacaApiKey
         "APCA-API-SECRET-KEY" = $script:AlpacaSecretKey
         "accept"              = "application/json"
+    }
+}
+
+function Get-PythonCommand {
+    if (Get-Command python -ErrorAction SilentlyContinue) {
+        return @{ FilePath = "python"; Arguments = @() }
+    }
+
+    if (Get-Command py -ErrorAction SilentlyContinue) {
+        return @{ FilePath = "py"; Arguments = @("-3") }
+    }
+
+    throw "Python was not found in PATH."
+}
+
+function Test-SafeToTrade {
+    $python = Get-PythonCommand
+    $pythonCode = @"
+import json
+import sys
+from pathlib import Path
+
+repo_root = Path.cwd()
+sys.path.insert(0, str(repo_root / "Alpaca"))
+
+import circuit_breaker
+
+safe, reason = circuit_breaker.is_safe_to_trade()
+print(json.dumps({"safe": safe, "reason": reason}))
+sys.exit(0 if safe else 2)
+"@
+
+    Push-Location $repoRoot
+    try {
+        $output = & $python.FilePath @($python.Arguments + @("-c", $pythonCode)) 2>&1
+    }
+    finally {
+        Pop-Location
+    }
+
+    if (-not $output) {
+        throw "Circuit breaker returned no output."
+    }
+
+    $result = ($output | Select-Object -Last 1) | ConvertFrom-Json
+    if (-not $result.safe) {
+        throw $result.reason
     }
 }
 
@@ -184,6 +265,8 @@ function Submit-Order {
         [string]$Side
     )
 
+    Test-SafeToTrade
+
     $body = @{
         symbol        = $Symbol
         qty           = $Qty
@@ -252,7 +335,7 @@ function Show-Quote {
     }
 }
 
-function Buy-Shares {
+function Submit-BuyOrder {
     param(
         [Parameter(Mandatory)]
         [string]$Symbol,
@@ -274,7 +357,7 @@ function Buy-Shares {
     }
 }
 
-function Sell-Shares {
+function Submit-SellOrder {
     param(
         [Parameter(Mandatory)]
         [string]$Symbol,
@@ -448,12 +531,12 @@ function Start-EmaBot {
 
                 if ($crossUp -and -not $inPosition) {
                     Write-Host " -> BUY"
-                    Buy-Shares -Symbol $script:BotTicker -Qty $script:BotQty
+                    Submit-BuyOrder -Symbol $script:BotTicker -Qty $script:BotQty
                     $inPosition = $true
                 }
                 elseif ($crossDown -and $inPosition) {
                     Write-Host " -> SELL"
-                    Sell-Shares -Symbol $script:BotTicker -Qty $script:BotQty
+                    Submit-SellOrder -Symbol $script:BotTicker -Qty $script:BotQty
                     $inPosition = $false
                 }
                 else {
@@ -500,14 +583,14 @@ switch ($Command.ToLower()) {
             Write-Host "Usage: .\alpaca_paper.ps1 buy AAPL 1"
             exit 1
         }
-        Buy-Shares -Symbol $Ticker -Qty $Qty
+        Submit-BuyOrder -Symbol $Ticker -Qty $Qty
     }
     "sell" {
         if (-not $Ticker -or -not $Qty) {
             Write-Host "Usage: .\alpaca_paper.ps1 sell AAPL 1"
             exit 1
         }
-        Sell-Shares -Symbol $Ticker -Qty $Qty
+        Submit-SellOrder -Symbol $Ticker -Qty $Qty
     }
     "positions" {
         Show-Positions

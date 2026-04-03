@@ -1,0 +1,14 @@
+# Filename: .gitignore
+# Purpose: Ignore local secrets, Python caches, and build artifacts.
+# Author: TODO
+.env
+*.env
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/

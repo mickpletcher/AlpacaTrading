@@ -1,0 +1,48 @@
+<!-- Filename: report.html | Purpose: Generated trading journal summary report. | Author: TODO -->
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Trading Journal Report</title>
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; margin: 2rem; background: #f5f7fa; color: #1f2933; }
+    h1 { margin-bottom: 0.25rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .card { background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08); }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { border: 1px solid #d2d6dc; padding: 0.75rem; text-align: left; }
+    th { background: #e5eef7; }
+  </style>
+</head>
+<body>
+  <h1>Trading Journal Summary</h1>
+  <p>Source file: trades.csv</p>
+  <div class="grid">
+    <div class="card"><strong>Total Trades</strong><br>1</div>
+    <div class="card"><strong>Win Rate</strong><br>100.00%</div>
+    <div class="card"><strong>Total P&amp;L</strong><br>25.00</div>
+    <div class="card"><strong>Average P&amp;L</strong><br>25.00</div>
+    <div class="card"><strong>Largest Win</strong><br>25.00</div>
+    <div class="card"><strong>Largest Loss</strong><br>25.00</div>
+    <div class="card"><strong>Best Symbol</strong><br>AAPL (25.00)</div>
+    <div class="card"><strong>Worst Symbol</strong><br>AAPL (25.00)</div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Symbol</th>
+        <th>Side</th>
+        <th>Qty</th>
+        <th>Entry Price</th>
+        <th>Exit Price</th>
+        <th>P&amp;L</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>2026-01-02</td><td>AAPL</td><td>BUY</td><td>10</td><td>200.00</td><td>202.50</td><td>25.00</td><td>Sample paper trade</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

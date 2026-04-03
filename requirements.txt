@@ -1,0 +1,18 @@
+# Filename: requirements.txt
+# Purpose: Pin Python dependencies used across trading, safety, and test scripts.
+# Author: TODO
+
+# Modern Alpaca SDK for trading and market data access.
+alpaca-py==0.43.2
+
+# Tabular analysis support for journal and strategy data workflows.
+pandas==3.0.2
+
+# Direct HTTP client for Alpaca health checks and circuit breaker calls.
+requests==2.33.1
+
+# Loads local secrets from the root .env file.
+python-dotenv==1.2.2
+
+# Test runner for connection and smoke checks.
+pytest==9.0.2

@@ -1,136 +1,167 @@
 """
-=============================================================
-  Alpaca Paper Trading Environment
-  Paper trading = real market data, fake money. No risk.
+Alpaca paper trading helpers.
 
-  SETUP:
-  1. Create a FREE account at https://alpaca.markets
-  2. Go to Paper Trading section → generate API keys
-  3. Add your keys to config.py (never hardcode them here)
-  4. pip install alpaca-trade-api pandas --break-system-packages
-
-  Usage:
-    python alpaca_paper.py status          # Account info
-    python alpaca_paper.py quote AAPL      # Get a quote
-    python alpaca_paper.py buy AAPL 1      # Buy 1 share
-    python alpaca_paper.py sell AAPL 1     # Sell 1 share
-    python alpaca_paper.py positions       # View open positions
-    python alpaca_paper.py orders          # View open orders
-    python alpaca_paper.py bot             # Run EMA crossover bot (paper)
-=============================================================
+Usage:
+  python alpaca_paper.py status
+  python alpaca_paper.py quote AAPL
+  python alpaca_paper.py buy AAPL 1
+  python alpaca_paper.py sell AAPL 1
+  python alpaca_paper.py positions
+  python alpaca_paper.py orders
+  python alpaca_paper.py bot
 """
 
+from __future__ import annotations
+
+import os
 import sys
 import time
-import json
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
-# ─────────────────────────────────────────────
-# CONFIGURATION — fill in your Alpaca paper keys
-# Get them free at https://alpaca.markets (Paper Trading section)
-# ─────────────────────────────────────────────
-ALPACA_API_KEY    = "YOUR_PAPER_API_KEY"      # Replace this
-ALPACA_SECRET_KEY = "YOUR_PAPER_SECRET_KEY"   # Replace this
-BASE_URL          = "https://paper-api.alpaca.markets"  # Paper trading URL — NOT real money
-# ─────────────────────────────────────────────
+import requests
+from dotenv import load_dotenv
 
-# Bot settings
-BOT_TICKER    = "SPY"
-BOT_INTERVAL  = 60       # seconds between checks
-BOT_QTY       = 1        # shares per trade
-EMA_FAST      = 9
-EMA_SLOW      = 21
-PRICE_HISTORY = []       # in-memory price buffer
+from circuit_breaker import is_safe_to_trade
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+ENV_PATH = ROOT_DIR / ".env"
+load_dotenv(ENV_PATH)
+
+ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "").strip()
+ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "").strip()
+TRADING_BASE_URL = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets").strip().rstrip("/")
+DATA_BASE_URL = "https://data.alpaca.markets"
+
+BOT_TICKER = os.getenv("ALPACA_BOT_TICKER", "SPY").strip().upper()
+BOT_INTERVAL = max(5, int(os.getenv("ALPACA_BOT_INTERVAL_SECONDS", "60")))
+BOT_QTY = max(1, int(os.getenv("ALPACA_BOT_QTY", "1")))
+EMA_FAST = max(2, int(os.getenv("ALPACA_BOT_EMA_FAST", "9")))
+EMA_SLOW = max(EMA_FAST + 1, int(os.getenv("ALPACA_BOT_EMA_SLOW", "21")))
+PRICE_HISTORY: list[float] = []
 
 
-def get_client():
-    """Return Alpaca REST client. Fails clearly if keys not set."""
-    try:
-        import alpaca_trade_api as tradeapi
-    except ImportError:
-        print("❌ Run: pip install alpaca-trade-api --break-system-packages")
+def get_headers() -> dict[str, str]:
+    if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
+        print("Alpaca credentials are missing. Add ALPACA_API_KEY and ALPACA_SECRET_KEY to .env.")
         sys.exit(1)
 
-    if "YOUR_PAPER" in ALPACA_API_KEY:
-        print("⚠️  API keys not configured.")
-        print("   1. Sign up at https://alpaca.markets (free)")
-        print("   2. Go to Paper Trading → generate API keys")
-        print(f"   3. Edit this file and replace ALPACA_API_KEY and ALPACA_SECRET_KEY")
-        sys.exit(1)
-
-    return tradeapi.REST(ALPACA_API_KEY, ALPACA_SECRET_KEY, BASE_URL, api_version="v2")
+    return {
+        "APCA-API-KEY-ID": ALPACA_API_KEY,
+        "APCA-API-SECRET-KEY": ALPACA_SECRET_KEY,
+        "accept": "application/json",
+    }
 
 
-def cmd_status(api):
-    """Print account summary."""
-    acct = api.get_account()
+def api_request(
+    method: str,
+    path: str,
+    *,
+    params: dict[str, str] | None = None,
+    payload: dict[str, object] | None = None,
+    use_data_api: bool = False,
+    allow_not_found: bool = False,
+) -> dict[str, object] | list[dict[str, object]]:
+    base_url = DATA_BASE_URL if use_data_api else TRADING_BASE_URL
+    response = requests.request(
+        method=method,
+        url=f"{base_url}{path}",
+        headers=get_headers(),
+        params=params,
+        json=payload,
+        timeout=15,
+    )
+
+    if allow_not_found and response.status_code == 404:
+        return {}
+
+    response.raise_for_status()
+    return response.json()
+
+
+def cmd_status() -> None:
+    acct = api_request("GET", "/v2/account")
     print("\n📊 PAPER ACCOUNT STATUS")
     print("=" * 40)
-    print(f"  Status:          {acct.status}")
-    print(f"  Portfolio Value: ${float(acct.portfolio_value):>12,.2f}")
-    print(f"  Cash:            ${float(acct.cash):>12,.2f}")
-    print(f"  Buying Power:    ${float(acct.buying_power):>12,.2f}")
-    print(f"  Day Trades Used: {acct.daytrade_count} / 3 (PDT rule)")
-    print(f"  Equity:          ${float(acct.equity):>12,.2f}")
-    pnl = float(acct.equity) - float(acct.last_equity)
+    print(f"  Status:          {acct['status']}")
+    print(f"  Portfolio Value: ${float(acct['portfolio_value']):>12,.2f}")
+    print(f"  Cash:            ${float(acct['cash']):>12,.2f}")
+    print(f"  Buying Power:    ${float(acct['buying_power']):>12,.2f}")
+    print(f"  Day Trades Used: {acct['daytrade_count']} / 3 (PDT rule)")
+    print(f"  Equity:          ${float(acct['equity']):>12,.2f}")
+    pnl = float(acct["equity"]) - float(acct["last_equity"])
     emoji = "📈" if pnl >= 0 else "📉"
     print(f"  Today's P&L:     {emoji} ${pnl:>+,.2f}")
     print("=" * 40)
 
 
-def cmd_quote(api, ticker: str):
-    """Get latest quote for a ticker."""
+def cmd_quote(ticker: str) -> None:
     try:
-        quote = api.get_latest_quote(ticker)
-        trade = api.get_latest_trade(ticker)
+        quote_response = api_request(
+            "GET",
+            "/v2/stocks/quotes/latest",
+            params={"symbols": ticker},
+            use_data_api=True,
+        )
+        trade_response = api_request(
+            "GET",
+            "/v2/stocks/trades/latest",
+            params={"symbols": ticker},
+            use_data_api=True,
+        )
+        quote = quote_response["quotes"][ticker]
+        trade = trade_response["trades"][ticker]
         print(f"\n📌 {ticker}")
-        print(f"   Bid:   ${float(quote.bp):>10.2f}  (x{quote.bs})")
-        print(f"   Ask:   ${float(quote.ap):>10.2f}  (x{quote.as_})")
-        print(f"   Last:  ${float(trade.p):>10.2f}  @ {trade.t}")
-        spread = float(quote.ap) - float(quote.bp)
-        print(f"   Spread: ${spread:.4f}  ({spread/float(trade.p)*100:.3f}%)")
-    except Exception as e:
-        print(f"❌ Quote error: {e}")
+        print(f"   Bid:   ${float(quote['bp']):>10.2f}  (x{quote['bs']})")
+        print(f"   Ask:   ${float(quote['ap']):>10.2f}  (x{quote['as']})")
+        print(f"   Last:  ${float(trade['p']):>10.2f}  @ {trade['t']}")
+        spread = float(quote["ap"]) - float(quote["bp"])
+        print(f"   Spread: ${spread:.4f}  ({spread/float(trade['p'])*100:.3f}%)")
+    except Exception as exc:
+        print(f"❌ Quote error: {exc}")
 
 
-def cmd_buy(api, ticker: str, qty: int):
-    """Submit a market buy order."""
+def submit_market_order(ticker: str, qty: int, side: str) -> dict[str, object] | None:
+    safe_to_trade, reason = is_safe_to_trade()
+    if not safe_to_trade:
+        print(f"   Trading blocked: {reason}")
+        return None
+
+    try:
+        return api_request(
+            "POST",
+            "/v2/orders",
+            payload={
+                "symbol": ticker,
+                "qty": qty,
+                "side": side,
+                "type": "market",
+                "time_in_force": "day",
+            },
+        )
+    except Exception as exc:
+        print(f"   Order failed: {exc}")
+        return None
+
+
+def cmd_buy(ticker: str, qty: int) -> None:
     print(f"\n🛒 Buying {qty} share(s) of {ticker} at market...")
-    try:
-        order = api.submit_order(
-            symbol=ticker,
-            qty=qty,
-            side="buy",
-            type="market",
-            time_in_force="day"
-        )
-        print(f"   ✅ Order submitted: {order.id}")
-        print(f"   Status: {order.status}")
-    except Exception as e:
-        print(f"   ❌ Order failed: {e}")
+    order = submit_market_order(ticker, qty, "buy")
+    if order:
+        print(f"   ✅ Order submitted: {order['id']}")
+        print(f"   Status: {order['status']}")
 
 
-def cmd_sell(api, ticker: str, qty: int):
-    """Submit a market sell order."""
+def cmd_sell(ticker: str, qty: int) -> None:
     print(f"\n💰 Selling {qty} share(s) of {ticker} at market...")
-    try:
-        order = api.submit_order(
-            symbol=ticker,
-            qty=qty,
-            side="sell",
-            type="market",
-            time_in_force="day"
-        )
-        print(f"   ✅ Order submitted: {order.id}")
-        print(f"   Status: {order.status}")
-    except Exception as e:
-        print(f"   ❌ Order failed: {e}")
+    order = submit_market_order(ticker, qty, "sell")
+    if order:
+        print(f"   ✅ Order submitted: {order['id']}")
+        print(f"   Status: {order['status']}")
 
 
-def cmd_positions(api):
-    """Show all open positions."""
-    positions = api.list_positions()
+def cmd_positions() -> None:
+    positions = api_request("GET", "/v2/positions")
     if not positions:
         print("\n📭 No open positions.")
         return
@@ -138,49 +169,44 @@ def cmd_positions(api):
     print("=" * 55)
     print(f"  {'Symbol':<8} {'Qty':>5} {'Entry':>10} {'Current':>10} {'P&L':>10}")
     print("-" * 55)
-    for p in positions:
-        pnl = float(p.unrealized_pl)
+    for position in positions:
+        pnl = float(position["unrealized_pl"])
         emoji = "▲" if pnl >= 0 else "▼"
-        print(f"  {p.symbol:<8} {p.qty:>5} ${float(p.avg_entry_price):>9.2f} "
-              f"${float(p.current_price):>9.2f} {emoji}${pnl:>+9.2f}")
+        print(
+            f"  {position['symbol']:<8} {position['qty']:>5} ${float(position['avg_entry_price']):>9.2f} "
+            f"${float(position['current_price']):>9.2f} {emoji}${pnl:>+9.2f}"
+        )
     print("=" * 55)
 
 
-def cmd_orders(api):
-    """Show open orders."""
-    orders = api.list_orders(status="open")
+def cmd_orders() -> None:
+    orders = api_request("GET", "/v2/orders", params={"status": "open"})
     if not orders:
         print("\n📭 No open orders.")
         return
     print(f"\n📋 OPEN ORDERS ({len(orders)})")
     print("=" * 55)
-    for o in orders:
-        print(f"  {o.symbol} | {o.side.upper()} {o.qty} | {o.type} | {o.status}")
+    for order in orders:
+        print(f"  {order['symbol']} | {str(order['side']).upper()} {order['qty']} | {order['type']} | {order['status']}")
     print("=" * 55)
 
 
-def ema(prices: list, period: int) -> float:
-    """Calculate EMA from a list of prices."""
+def ema(prices: list[float], period: int) -> float | None:
     if len(prices) < period:
         return None
-    k = 2 / (period + 1)
-    ema_val = sum(prices[:period]) / period
+    smoothing = 2 / (period + 1)
+    ema_value = sum(prices[:period]) / period
     for price in prices[period:]:
-        ema_val = price * k + ema_val * (1 - k)
-    return ema_val
+        ema_value = price * smoothing + ema_value * (1 - smoothing)
+    return ema_value
 
 
-def is_market_open(api) -> bool:
-    clock = api.get_clock()
-    return clock.is_open
+def is_market_open() -> bool:
+    clock = api_request("GET", "/v2/clock")
+    return bool(clock.get("is_open"))
 
 
-def run_bot(api):
-    """
-    Simple EMA crossover paper trading bot.
-    Runs in a loop, checks price every BOT_INTERVAL seconds.
-    Only trades during market hours.
-    """
+def run_bot() -> None:
     print(f"\n🤖 EMA CROSSOVER BOT — {BOT_TICKER}")
     print(f"   Fast EMA: {EMA_FAST} | Slow EMA: {EMA_SLOW}")
     print(f"   Qty per trade: {BOT_QTY} share(s)")
@@ -188,96 +214,92 @@ def run_bot(api):
     print("   Press Ctrl+C to stop.\n")
 
     in_position = False
+    prev_fast = None
+    prev_slow = None
 
-    # Check if we already have a position
     try:
-        pos = api.get_position(BOT_TICKER)
-        in_position = True
-        print(f"   📂 Existing position found: {pos.qty} shares")
-    except:
+        position = api_request("GET", f"/v2/positions/{BOT_TICKER}", allow_not_found=True)
+        if position:
+            in_position = True
+            print(f"   📂 Existing position found: {position['qty']} shares")
+    except Exception:
         pass
 
     while True:
         try:
-            if not is_market_open(api):
+            if not is_market_open():
                 print(f"   ⏰ Market closed. Waiting... ({datetime.now().strftime('%H:%M:%S')})")
                 time.sleep(60)
                 continue
 
-            # Get latest price
-            trade = api.get_latest_trade(BOT_TICKER)
-            price = float(trade.p)
+            trade_response = api_request(
+                "GET",
+                "/v2/stocks/trades/latest",
+                params={"symbols": BOT_TICKER},
+                use_data_api=True,
+            )
+            price = float(trade_response["trades"][BOT_TICKER]["p"])
             PRICE_HISTORY.append(price)
 
-            # Keep buffer manageable
             if len(PRICE_HISTORY) > 100:
                 PRICE_HISTORY.pop(0)
 
             fast = ema(PRICE_HISTORY, EMA_FAST)
             slow = ema(PRICE_HISTORY, EMA_SLOW)
-
-            ts = datetime.now().strftime("%H:%M:%S")
+            timestamp = datetime.now().strftime("%H:%M:%S")
 
             if fast is None or slow is None:
                 bars_needed = max(EMA_FAST, EMA_SLOW)
-                print(f"   [{ts}] ${price:.2f} | Collecting data... ({len(PRICE_HISTORY)}/{bars_needed})")
+                print(f"   [{timestamp}] ${price:.2f} | Collecting data... ({len(PRICE_HISTORY)}/{bars_needed})")
             else:
                 signal = "▲ BULL" if fast > slow else "▼ BEAR"
-                print(f"   [{ts}] ${price:.2f} | EMA9={fast:.2f} EMA21={slow:.2f} | {signal}", end="")
+                print(f"   [{timestamp}] ${price:.2f} | EMA9={fast:.2f} EMA21={slow:.2f} | {signal}", end="")
+                cross_up = prev_fast is not None and prev_slow is not None and prev_fast <= prev_slow and fast > slow
+                cross_down = prev_fast is not None and prev_slow is not None and prev_fast >= prev_slow and fast < slow
 
-                # Buy signal: fast crosses above slow and not in position
-                if fast > slow and not in_position:
+                if cross_up and not in_position:
                     print(" → 🛒 BUY")
-                    cmd_buy(api, BOT_TICKER, BOT_QTY)
-                    in_position = True
-
-                # Sell signal: fast crosses below slow and in position
-                elif fast < slow and in_position:
+                    order = submit_market_order(BOT_TICKER, BOT_QTY, "buy")
+                    if order:
+                        in_position = True
+                elif cross_down and in_position:
                     print(" → 💰 SELL")
-                    cmd_sell(api, BOT_TICKER, BOT_QTY)
-                    in_position = False
+                    order = submit_market_order(BOT_TICKER, BOT_QTY, "sell")
+                    if order:
+                        in_position = False
                 else:
                     print(" → HOLD")
 
-            time.sleep(BOT_INTERVAL)
+                prev_fast = fast
+                prev_slow = slow
 
+            time.sleep(BOT_INTERVAL)
         except KeyboardInterrupt:
             print("\n\n🛑 Bot stopped.")
-            cmd_status(api)
+            cmd_status()
             break
-        except Exception as e:
-            print(f"\n   ⚠️  Error: {e}")
+        except Exception as exc:
+            print(f"\n   ⚠️  Error: {exc}")
             time.sleep(30)
 
 
-# ─────────────────────────────────────────────
-# CLI
-# ─────────────────────────────────────────────
-def main():
+def main() -> None:
     args = sys.argv[1:]
-    api  = get_client()
 
     if not args or args[0] == "status":
-        cmd_status(api)
-
+        cmd_status()
     elif args[0] == "quote" and len(args) >= 2:
-        cmd_quote(api, args[1].upper())
-
+        cmd_quote(args[1].upper())
     elif args[0] == "buy" and len(args) >= 3:
-        cmd_buy(api, args[1].upper(), int(args[2]))
-
+        cmd_buy(args[1].upper(), int(args[2]))
     elif args[0] == "sell" and len(args) >= 3:
-        cmd_sell(api, args[1].upper(), int(args[2]))
-
+        cmd_sell(args[1].upper(), int(args[2]))
     elif args[0] == "positions":
-        cmd_positions(api)
-
+        cmd_positions()
     elif args[0] == "orders":
-        cmd_orders(api)
-
+        cmd_orders()
     elif args[0] == "bot":
-        run_bot(api)
-
+        run_bot()
     else:
         print("\nUsage:")
         print("  python alpaca_paper.py status")

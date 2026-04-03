@@ -1,0 +1,1 @@
+2026-04-03T18:41:03.123817+00:00	Missing Alpaca credentials in .env or the current environment.
