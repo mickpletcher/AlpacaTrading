@@ -59,6 +59,7 @@ Why it is still not the same as live trading:
 | `Learning Roadmap/` | Guided learning path from basics to multi strategy workflows | Complete beginners | study plan, next steps, example prompts |
 | `Scheduler/` | Automation entry points for scheduled runs | Windows and shell users | `Journal/scheduler_log.txt` |
 | `rsi_macd_bot/` | Fully automated RSI plus MACD signal bot using Alpaca market orders | Intermediate and technical users | `trades.log`, market and stop orders |
+| `btc-signal-executor/` | TradingView webhook executor for fully automated BTC signal routing | Intermediate and technical users | `executor.log`, market orders from webhook alerts |
 | `Tests/` | Fast validation of strategy logic and API connectivity | Contributors and careful operators | pytest pass, fail, or skip results |
 
 ## Repository Structure
@@ -107,6 +108,14 @@ Trading/
 |   |-- bot.py                  # Main scan loop that runs every 5 minutes
 |   |-- .env.example            # Bot specific environment template
 |   |-- requirements.txt        # Bot specific dependencies
+|-- btc-signal-executor/
+|   |-- README.md               # TradingView webhook executor guide
+|   |-- main.py                 # FastAPI app and /webhook endpoint
+|   |-- executor.py             # Alpaca order routing logic
+|   |-- validator.py            # Payload schema and passphrase checks
+|   |-- config.py               # Environment configuration loader
+|   |-- .env.example            # Executor env template
+|   |-- requirements.txt        # Executor dependencies
 |-- Tests/
 |   |-- README.md               # Test guide and interpretation help
 |   |-- test_connection.py      # Live Alpaca connectivity checks using .env credentials
@@ -427,6 +436,37 @@ Expected success signs:
 - buy orders are skipped for symbols that already have open positions
 - stop loss orders are submitted after buy fills
 
+## Run the BTC TradingView Signal Executor
+
+This module exposes a FastAPI webhook endpoint that executes incoming TradingView alerts immediately with no confirmation step.
+
+Install dependencies:
+
+```powershell
+python -m pip install -r .\btc-signal-executor\requirements.txt
+```
+
+Create environment values:
+
+```powershell
+Copy-Item .\btc-signal-executor\.env.example .env
+notepad .env
+```
+
+Start the server:
+
+```powershell
+python -m uvicorn main:app --host 0.0.0.0 --port 8080 --app-dir .\btc-signal-executor
+```
+
+Expected success signs:
+
+- `GET /health` responds with status ok
+- `POST /webhook` rejects wrong passphrase with `401`
+- malformed payloads return `422`
+- valid payloads trigger Alpaca execution attempt and return `200`
+- all inbound requests and execution outcomes are logged to `btc-signal-executor/executor.log`
+
 ## How the Scheduler Works
 
 The scheduler scripts do three main things:
@@ -494,6 +534,8 @@ What a skipped test means:
 | PowerShell blocks `.ps1` scripts | execution policy prevents script launch | run `Set-ExecutionPolicy -Scope Process Bypass` in the current shell |
 | journal page opens but data is missing | the app has not refreshed after a strategy wrote new CSV rows | reload the page so the journal can sync the latest CSV rows into SQLite |
 | RSI plus MACD bot exits immediately | `.env` is missing credentials or `PAPER` value is invalid | set `ALPACA_API_KEY`, `ALPACA_SECRET_KEY`, and use `PAPER=true` for testing |
+| BTC signal executor fails on startup | required env values are missing | set `ALPACA_API_KEY`, `ALPACA_SECRET_KEY`, `WEBHOOK_PASSPHRASE`, and `PORT` |
+| TradingView retries keep happening | endpoint returns non-200 at execution stage | keep 401 and 422 only for validation failures and return 200 after execution attempts |
 | tests are skipped | credentials are not set | add keys to `.env` if you want live connectivity tests |
 | `No bars returned` in backtests | symbol or date range does not have data | try a different symbol or broader date range |
 | strategy logs say trading is blocked | circuit breaker detected losses or API problems | inspect `Journal/circuit_log.txt` and fix the underlying issue before retrying |
@@ -549,6 +591,7 @@ You are in good shape when all of the following are true:
 - the journal app opens at `http://localhost:5000`
 - `python .\Journal\analyze_journal.py` writes `Journal/report.html`
 - `python .\rsi_macd_bot\bot.py` writes signal and order events to `rsi_macd_bot/trades.log`
+- `python -m uvicorn main:app --host 0.0.0.0 --port 8080 --app-dir .\btc-signal-executor` accepts webhook payloads and writes `btc-signal-executor/executor.log`
 - scheduler runs create entries in `Journal/scheduler_log.txt`
 
 ## Screenshots
