@@ -190,6 +190,7 @@ function Invoke-AlpacaTradingApi {
 function Invoke-AlpacaDataApi {
     param(
         [Parameter(Mandatory)]
+        #pragma warning disable PSUseApprovedVerbs
         [string]$Path
     )
 
@@ -205,6 +206,7 @@ function Invoke-AlpacaDataApi {
             $msg = $_.ErrorDetails.Message
         }
         throw $msg
+        #pragma warning restore PSUseApprovedVerbs
     }
 }
 
@@ -335,7 +337,7 @@ function Show-Quote {
     }
 }
 
-function Submit-BuyOrder {
+function Submit-Buy {
     param(
         [Parameter(Mandatory)]
         [string]$Symbol,
@@ -357,7 +359,7 @@ function Submit-BuyOrder {
     }
 }
 
-function Submit-SellOrder {
+function Submit-Sell {
     param(
         [Parameter(Mandatory)]
         [string]$Symbol,
@@ -531,12 +533,12 @@ function Start-EmaBot {
 
                 if ($crossUp -and -not $inPosition) {
                     Write-Host " -> BUY"
-                    Submit-BuyOrder -Symbol $script:BotTicker -Qty $script:BotQty
+                    Submit-Buy -Symbol $script:BotTicker -Qty $script:BotQty
                     $inPosition = $true
                 }
                 elseif ($crossDown -and $inPosition) {
                     Write-Host " -> SELL"
-                    Submit-SellOrder -Symbol $script:BotTicker -Qty $script:BotQty
+                    Submit-Sell -Symbol $script:BotTicker -Qty $script:BotQty
                     $inPosition = $false
                 }
                 else {
@@ -583,14 +585,14 @@ switch ($Command.ToLower()) {
             Write-Host "Usage: .\alpaca_paper.ps1 buy AAPL 1"
             exit 1
         }
-        Submit-BuyOrder -Symbol $Ticker -Qty $Qty
+        Submit-Buy -Symbol $Ticker -Qty $Qty
     }
     "sell" {
         if (-not $Ticker -or -not $Qty) {
             Write-Host "Usage: .\alpaca_paper.ps1 sell AAPL 1"
             exit 1
         }
-        Submit-SellOrder -Symbol $Ticker -Qty $Qty
+        Submit-Sell -Symbol $Ticker -Qty $Qty
     }
     "positions" {
         Show-Positions

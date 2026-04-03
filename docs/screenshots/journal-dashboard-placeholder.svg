@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Journal dashboard placeholder</title>
+  <desc id="desc">Placeholder image for the trading journal dashboard screenshot.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4efe6"/>
+      <stop offset="100%" stop-color="#d9e7f2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect x="64" y="56" width="1152" height="608" rx="28" fill="#ffffff" stroke="#203040" stroke-width="4"/>
+  <rect x="104" y="108" width="320" height="140" rx="18" fill="#e8f1f8"/>
+  <rect x="448" y="108" width="320" height="140" rx="18" fill="#edf5ea"/>
+  <rect x="792" y="108" width="320" height="140" rx="18" fill="#f8ede7"/>
+  <rect x="104" y="282" width="1008" height="302" rx="18" fill="#f7f9fb" stroke="#d8e0e8" stroke-width="3"/>
+  <rect x="104" y="612" width="500" height="18" rx="9" fill="#d7dee6"/>
+  <text x="104" y="92" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#203040">Screenshot Placeholder</text>
+  <text x="104" y="170" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#203040">Journal Dashboard</text>
+  <text x="104" y="208" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#405468">Replace with the real trade journal home view.</text>
+  <text x="136" y="338" font-family="Consolas, monospace" font-size="22" fill="#506070">date        symbol   side   qty   entry   exit   pnl   notes</text>
+  <text x="136" y="382" font-family="Consolas, monospace" font-size="20" fill="#74879a">2026-01-02  AAPL     BUY    10    200.00 0.00   0.00  manual_journal</text>
+  <text x="136" y="420" font-family="Consolas, monospace" font-size="20" fill="#74879a">2026-01-03  AAPL     SELL   10    200.00 202.50 25.00 review_ready</text>
+  <text x="136" y="470" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="600" fill="#203040">Suggested capture</text>
+  <text x="136" y="510" font-family="Segoe UI, Arial, sans-serif" font-size="21" fill="#405468">Show the dashboard with trade list, stats cards, and export button visible.</text>
+</svg>

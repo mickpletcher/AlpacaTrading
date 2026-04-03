@@ -1,18 +1,35 @@
-# Filename: requirements.txt
-# Purpose: Pin Python dependencies used across trading, safety, and test scripts.
-# Author: TODO
+# Python dependencies for the Trading repository
+# Install with: python -m pip install -r requirements.txt
 
-# Modern Alpaca SDK for trading and market data access.
+# Official Alpaca SDK used by trading, market data, and live runner scripts.
 alpaca-py==0.43.2
 
-# Tabular analysis support for journal and strategy data workflows.
+# Core dataframe library used across backtests, indicators, journal summaries, and tests.
 pandas==3.0.2
 
-# Direct HTTP client for Alpaca health checks and circuit breaker calls.
+# Numerical array support used by strategy calculations and synthetic tests.
+numpy==2.4.4
+
+# Direct HTTP client used by connectivity tests and circuit breaker checks.
 requests==2.33.1
 
-# Loads local secrets from the root .env file.
+# Loads local values from the root .env file.
 python-dotenv==1.2.2
 
-# Test runner for connection and smoke checks.
+# Time zone support used by market time calculations and Alpaca workflows.
+pytz==2026.1.post1
+
+# Backtrader engine used by the Bollinger plus RSI Backtrader workflow.
+backtrader==1.9.78.123
+
+# backtesting.py engine used by Backtesting/backtest.py.
+backtesting==0.6.5
+
+# Yahoo Finance data client used by Backtesting/backtest.py.
+yfinance==1.2.0
+
+# Flask web framework used by the journal web application.
+Flask==3.1.3
+
+# Test runner used for strategy logic tests and Alpaca connectivity tests.
 pytest==9.0.2

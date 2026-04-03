@@ -16,54 +16,29 @@
 =============================================================
 """
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, Response, jsonify, request, send_from_directory
 import sqlite3
-import csv
 import io
 from datetime import datetime
 from pathlib import Path
 
-app = Flask(__name__, static_folder=".")
-DB_PATH = "trades.db"
+from journal_store import CSV_PATH, JOURNAL_DIR, ensure_trade_table, get_db_connection, sync_csv_to_sqlite, sync_sqlite_to_csv
+
+app = Flask(__name__, static_folder=str(JOURNAL_DIR))
 
 
 # ─────────────────────────────────────────────
 # DATABASE SETUP
 # ─────────────────────────────────────────────
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS trades (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            date        TEXT NOT NULL,
-            ticker      TEXT NOT NULL,
-            direction   TEXT NOT NULL,   -- LONG or SHORT
-            entry       REAL NOT NULL,
-            exit        REAL,
-            qty         INTEGER NOT NULL,
-            stop_loss   REAL,
-            target      REAL,
-            pnl         REAL,
-            result      TEXT,            -- WIN / LOSS / BREAKEVEN / OPEN
-            setup       TEXT,            -- EMA Cross, VWAP, ORB, etc.
-            timeframe   TEXT,            -- 1m, 5m, 15m, etc.
-            emotion     TEXT,            -- Calm, Anxious, FOMO, Revenge, etc.
-            mistake     TEXT,            -- What went wrong (if anything)
-            lesson      TEXT,            -- What you learned
-            notes       TEXT,
-            screenshot  TEXT,            -- File path or URL
-            created_at  TEXT DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
+    conn = get_db_connection()
+    ensure_trade_table(conn)
+    sync_csv_to_sqlite(conn)
     conn.close()
 
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return get_db_connection()
 
 
 # ─────────────────────────────────────────────
@@ -105,6 +80,7 @@ def calc_rr(entry, stop_loss, target, direction):
 @app.route("/api/trades", methods=["GET"])
 def get_trades():
     conn = get_db()
+    sync_csv_to_sqlite(conn)
     trades = conn.execute(
         "SELECT * FROM trades ORDER BY date DESC, created_at DESC"
     ).fetchall()
@@ -150,6 +126,7 @@ def add_trade():
         data.get("notes", "")
     ))
     conn.commit()
+    sync_sqlite_to_csv(conn)
     conn.close()
     return jsonify({"status": "ok", "pnl": pnl, "result": result}), 201
 
@@ -161,6 +138,7 @@ def update_trade(trade_id):
     exit_price = float(data["exit"])
 
     conn  = get_db()
+    sync_csv_to_sqlite(conn)
     trade = conn.execute("SELECT * FROM trades WHERE id=?", (trade_id,)).fetchone()
     if not trade:
         return jsonify({"error": "Not found"}), 404
@@ -179,6 +157,7 @@ def update_trade(trade_id):
         trade_id
     ))
     conn.commit()
+    sync_sqlite_to_csv(conn)
     conn.close()
     return jsonify({"status": "ok", "pnl": pnl, "result": result})
 
@@ -186,8 +165,10 @@ def update_trade(trade_id):
 @app.route("/api/trades/<int:trade_id>", methods=["DELETE"])
 def delete_trade(trade_id):
     conn = get_db()
+    sync_csv_to_sqlite(conn)
     conn.execute("DELETE FROM trades WHERE id=?", (trade_id,))
     conn.commit()
+    sync_sqlite_to_csv(conn)
     conn.close()
     return jsonify({"status": "deleted"})
 
@@ -195,6 +176,7 @@ def delete_trade(trade_id):
 @app.route("/api/stats", methods=["GET"])
 def get_stats():
     conn   = get_db()
+    sync_csv_to_sqlite(conn)
     trades = conn.execute("SELECT * FROM trades WHERE result != 'OPEN'").fetchall()
     conn.close()
 
@@ -259,16 +241,12 @@ def get_stats():
 @app.route("/api/export", methods=["GET"])
 def export_csv():
     conn   = get_db()
+    sync_csv_to_sqlite(conn)
+    sync_sqlite_to_csv(conn)
     trades = conn.execute("SELECT * FROM trades ORDER BY date").fetchall()
     conn.close()
 
-    output = io.StringIO()
-    if trades:
-        writer = csv.DictWriter(output, fieldnames=dict(trades[0]).keys())
-        writer.writeheader()
-        writer.writerows([dict(t) for t in trades])
-
-    from flask import Response
+    output = io.StringIO(CSV_PATH.read_text(encoding="utf-8"))
     return Response(
         output.getvalue(),
         mimetype="text/csv",
@@ -280,6 +258,7 @@ def export_csv():
 def ai_analysis_prompt():
     """Generate a prompt you can paste into Claude to analyze your trading."""
     conn   = get_db()
+    sync_csv_to_sqlite(conn)
     trades = conn.execute(
         "SELECT * FROM trades WHERE result != 'OPEN' ORDER BY date DESC LIMIT 30"
     ).fetchall()
@@ -322,7 +301,7 @@ Please analyze:
 
 @app.route("/")
 def index():
-    return send_from_directory(".", "journal.html")
+    return send_from_directory(JOURNAL_DIR, "journal.html")
 
 
 if __name__ == "__main__":

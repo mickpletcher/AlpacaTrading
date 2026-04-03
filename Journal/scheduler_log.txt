@@ -1,0 +1,24 @@
+2026-04-03 13:52:14-05:00	run_ema.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 13:52:27-05:00	run_ema.ps1 completed | mode=backtest | exit_code=1
+2026-04-03 13:52:39-05:00	run_ema.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 13:52:42-05:00	run_ema.ps1 completed | mode=backtest | exit_code=1
+2026-04-03 13:53:12-05:00	run_ema.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 13:53:16-05:00	run_ema.ps1 completed | mode=backtest | exit_code=Backtest failed: Missing ALPACA_API_KEY or ALPACA_SECRET_KEY in .env Runtime before failure: 0.00 seconds 1
+2026-04-03 13:53:51-05:00	run_ema.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 13:53:53-05:00	run_ema.ps1 completed | mode=backtest | exit_code=1
+2026-04-03 13:54:19-05:00	run_ema.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 13:54:19-05:00	run_ema.ps1 completed | mode=backtest | exit_code=0
+2026-04-03 14:01:53-05:00	run_bollinger_rsi.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 14:01:53-05:00	run_bollinger_rsi.ps1 completed | mode=backtest | symbol=SPY | exit_code=0
+2026-04-03 14:02:23-05:00	run_bollinger_rsi.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 14:02:23-05:00	run_bollinger_rsi.ps1 completed | mode=backtest | symbol=SPY | exit_code=0
+2026-04-03 14:09:55-05:00	run_rsi_stack.ps1 started | mode=backtest | symbol=SPY | fast_tf=1Hour | slow_tf=1Day
+2026-04-03 14:09:55-05:00	run_rsi_stack.ps1 completed | mode=backtest | symbol=SPY | fast_tf=1Hour | slow_tf=1Day | exit_code=0
+2026-04-03 14:33:01-05:00	run_gap_momentum.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 14:33:01-05:00	run_gap_momentum.ps1 completed | mode=backtest | symbol=SPY | exit_code=0
+2026-04-03 14:33:41-05:00	run_gap_momentum.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 14:33:41-05:00	run_gap_momentum.ps1 completed | mode=backtest | symbol=SPY | exit_code=0
+2026-04-03 14:34:01-05:00	run_gap_momentum.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 14:34:01-05:00	run_gap_momentum.ps1 completed | mode=backtest | symbol=SPY | exit_code=0
+2026-04-03 14:39:17-05:00	run_gap_momentum.ps1 started | mode=backtest | symbol=SPY
+2026-04-03 14:39:17-05:00	run_gap_momentum.ps1 completed | mode=backtest | symbol=SPY | exit_code=0

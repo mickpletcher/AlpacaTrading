@@ -1,0 +1,6 @@
+@{
+    ExcludeRules = @(
+        'PSAvoidAssignmentToAutomaticVariable',
+        'PSUseApprovedVerbs'
+    )
+}

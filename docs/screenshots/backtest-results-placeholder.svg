@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Backtest results placeholder</title>
+  <desc id="desc">Placeholder image for a backtest results chart screenshot.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eef3df"/>
+      <stop offset="100%" stop-color="#dbe7cf"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect x="64" y="56" width="1152" height="608" rx="28" fill="#ffffff" stroke="#24301d" stroke-width="4"/>
+  <text x="104" y="96" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#24301d">Screenshot Placeholder</text>
+  <text x="104" y="146" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#24301d">Backtest Results Chart</text>
+  <text x="104" y="184" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#53634a">Replace with the strategy equity curve or summary chart.</text>
+  <rect x="104" y="228" width="1070" height="340" rx="18" fill="#f8fbf3" stroke="#dce6d0" stroke-width="3"/>
+  <polyline points="136,496 230,474 324,482 418,430 512,446 606,380 700,390 794,334 888,350 982,286 1076,252 1140,224" fill="none" stroke="#59733c" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="136" y1="520" x2="1140" y2="520" stroke="#87977a" stroke-width="3"/>
+  <line x1="136" y1="260" x2="136" y2="520" stroke="#87977a" stroke-width="3"/>
+  <rect x="104" y="594" width="330" height="18" rx="9" fill="#d6e0c9"/>
+  <rect x="104" y="624" width="440" height="18" rx="9" fill="#d6e0c9"/>
+  <text x="780" y="620" font-family="Segoe UI, Arial, sans-serif" font-size="21" fill="#53634a">Capture the chart after a successful backtest run.</text>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Paper trading terminal placeholder</title>
+  <desc id="desc">Placeholder image for a paper trading terminal screenshot.</desc>
+  <rect width="1280" height="720" fill="#ece7df"/>
+  <rect x="84" y="70" width="1112" height="580" rx="24" fill="#15202b" stroke="#364554" stroke-width="4"/>
+  <circle cx="126" cy="104" r="10" fill="#ff6f61"/>
+  <circle cx="156" cy="104" r="10" fill="#f4bf4f"/>
+  <circle cx="186" cy="104" r="10" fill="#67c16f"/>
+  <text x="230" y="112" font-family="Consolas, monospace" font-size="24" fill="#d8e1ea">paper trading terminal</text>
+  <text x="124" y="176" font-family="Consolas, monospace" font-size="24" fill="#8ec07c">&gt; python .\Alpaca\alpaca_paper.py status</text>
+  <text x="124" y="226" font-family="Consolas, monospace" font-size="22" fill="#d8e1ea">Account status: ACTIVE</text>
+  <text x="124" y="262" font-family="Consolas, monospace" font-size="22" fill="#d8e1ea">Buying power: 100000.00</text>
+  <text x="124" y="298" font-family="Consolas, monospace" font-size="22" fill="#d8e1ea">Latest signal: HOLD</text>
+  <text x="124" y="360" font-family="Consolas, monospace" font-size="24" fill="#8ec07c">&gt; python .\Alpaca\alpaca_paper.py quote SPY</text>
+  <text x="124" y="410" font-family="Consolas, monospace" font-size="22" fill="#d8e1ea">Bid: 596.10   Ask: 596.13   Spread: 0.03</text>
+  <text x="124" y="504" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="600" fill="#f2cc8f">Screenshot Placeholder</text>
+  <text x="124" y="544" font-family="Segoe UI, Arial, sans-serif" font-size="21" fill="#d8e1ea">Replace with a real terminal capture that shows status or quote output.</text>
+</svg>
