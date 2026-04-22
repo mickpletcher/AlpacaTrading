@@ -6,6 +6,36 @@ This folder helps you run trading scripts automatically instead of manually star
 
 If you are new to scheduling, think of this as a timed launcher. It does not invent trading logic. It only starts the right script at the right time and records what happened.
 
+## Related Repo Guides
+
+- [Root README](../README.md)
+- [Backtesting Guide](../Backtesting/README.md)
+- [Journal Guide](../Journal/README.md)
+- [RSI Plus MACD Bot Guide](../rsi_macd_bot/README.md)
+- [BTC Signal Executor Guide](../btc-signal-executor/README.md)
+- [Tests Guide](../Tests/README.md)
+- [Applied Upgrades](../upgrades/upgrades.md)
+
+## Suggested Tutorials
+
+### Tutorial 1: Manual First, Scheduler Second
+
+1. Validate the target script manually using the [Root README](../README.md).
+2. Review its behavior in the [Backtesting Guide](../Backtesting/README.md) or module-specific README.
+3. Schedule it only after logs and outputs are understood.
+
+### Tutorial 2: Generic Paper Strategy Scheduling
+
+1. Run `Alpaca/paper_trade.py` manually.
+2. Use this guide to run `Scheduler/run_strategy.ps1`.
+3. Inspect `Journal/scheduler_log.txt` and the [Journal Guide](../Journal/README.md).
+
+### Tutorial 3: Advanced Scheduled Automation
+
+1. For continuous bot workflows, use [rsi_macd_bot/README.md](../rsi_macd_bot/README.md).
+2. For externally triggered execution, use [btc-signal-executor/README.md](../btc-signal-executor/README.md).
+3. For repo-level changes to scheduling conventions, review [Applied Upgrades](../upgrades/upgrades.md).
+
 ## What This Folder Is For
 
 Use this folder when you want to:

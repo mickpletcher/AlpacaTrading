@@ -9,6 +9,36 @@ If you are new to trading, a backtest is a replay of a strategy on historical ma
 > [!IMPORTANT]
 > A backtest can help you learn, but it is not proof that a strategy will work in the future.
 
+## Related Repo Guides
+
+- [Root README](../README.md)
+- [Learning Roadmap](../Learning%20Roadmap/README.md)
+- [Journal Guide](../Journal/README.md)
+- [Scheduler Guide](../Scheduler/README.md)
+- [Tests Guide](../Tests/README.md)
+- [Applied Upgrades](../upgrades/upgrades.md)
+- [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
+
+## Suggested Tutorials
+
+### Tutorial 1: First Historical Run
+
+1. Follow the root setup in [README.md](../README.md).
+2. Run `python .\Backtesting\backtest.py`.
+3. Review output expectations in this guide.
+
+### Tutorial 2: Strategy Backtest To Journal Review
+
+1. Run one strategy-specific backtest from this guide.
+2. Open the [Journal Guide](../Journal/README.md).
+3. Review how `Journal/trades.csv` and `report.html` fit into the workflow.
+
+### Tutorial 3: From Backtest To Scheduled Paper Workflow
+
+1. Validate strategy logic here first.
+2. Run the matching tests from [Tests/README.md](../Tests/README.md).
+3. Use the [Scheduler Guide](../Scheduler/README.md) only after manual runs succeed.
+
 ## What This Folder Is For
 
 Use this folder when you want to:

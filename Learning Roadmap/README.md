@@ -6,6 +6,38 @@ This folder explains how to learn the repo without trying to understand everythi
 
 If you are brand new to trading or coding, this is the pace to follow.
 
+## Related Repo Guides
+
+- [Root README](../README.md)
+- [Backtesting Guide](../Backtesting/README.md)
+- [Journal Guide](../Journal/README.md)
+- [Scheduler Guide](../Scheduler/README.md)
+- [Tests Guide](../Tests/README.md)
+- [RSI Plus MACD Bot Guide](../rsi_macd_bot/README.md)
+- [BTC Signal Executor Guide](../btc-signal-executor/README.md)
+- [Applied Upgrades](../upgrades/upgrades.md)
+
+## Suggested Tutorial Paths
+
+### Path 1: Beginner Safe Path
+
+1. Read the [Root README](../README.md).
+2. Run the simplest flow in the [Backtesting Guide](../Backtesting/README.md).
+3. Open the [Journal Guide](../Journal/README.md).
+4. Run the Python checks in the [Tests Guide](../Tests/README.md).
+
+### Path 2: Strategy Learning Path
+
+1. Follow the phases in this file.
+2. Use [Backtesting/README.md](../Backtesting/README.md) for commands and outputs.
+3. Use [Journal/README.md](../Journal/README.md) for review after each experiment.
+
+### Path 3: Automation Readiness Path
+
+1. Complete the earlier phases first.
+2. Move to [Scheduler/README.md](../Scheduler/README.md) for timed launches.
+3. Use [rsi_macd_bot/README.md](../rsi_macd_bot/README.md) and [btc-signal-executor/README.md](../btc-signal-executor/README.md) only after you understand the manual workflows.
+
 ## What This Folder Is For
 
 Use this folder when you want to:

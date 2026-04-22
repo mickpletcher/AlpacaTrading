@@ -6,6 +6,35 @@ Fully automated TradingView webhook receiver for BTC or crypto signals with imme
 
 No UI, no approval step, no retry logic, and no database.
 
+## Related Repo Guides
+
+- [Root README](../README.md)
+- [Scheduler Guide](../Scheduler/README.md)
+- [Journal Guide](../Journal/README.md)
+- [Tests Guide](../Tests/README.md)
+- [Applied Upgrades](../upgrades/upgrades.md)
+- [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
+
+## Suggested Tutorials
+
+### Tutorial 1: Local Health Check First
+
+1. Complete root setup from [README.md](../README.md).
+2. Run the local `uvicorn` command in this guide.
+3. Verify `GET /health` before sending webhook payloads.
+
+### Tutorial 2: Manual Webhook Validation
+
+1. Start the service locally.
+2. Send the curl-based buy, sell, and close tests from this guide.
+3. Review `executor.log` and your Alpaca paper activity.
+
+### Tutorial 3: Internet-Exposed Testing
+
+1. Validate local behavior first.
+2. Use the ngrok section in this guide.
+3. Compare this module with scheduled flows in the [Scheduler Guide](../Scheduler/README.md).
+
 ## Features
 
 - FastAPI webhook endpoint at `POST /webhook`

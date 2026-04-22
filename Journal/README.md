@@ -6,6 +6,36 @@ This folder helps you review what happened after a trade or a strategy run.
 
 It includes a browser based journal, CSV exports, logs, and an HTML summary report.
 
+## Related Repo Guides
+
+- [Root README](../README.md)
+- [Backtesting Guide](../Backtesting/README.md)
+- [Scheduler Guide](../Scheduler/README.md)
+- [Tests Guide](../Tests/README.md)
+- [Learning Roadmap](../Learning%20Roadmap/README.md)
+- [Applied Upgrades](../upgrades/upgrades.md)
+- [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
+
+## Suggested Tutorials
+
+### Tutorial 1: First Journal Launch
+
+1. Complete the root setup in [README.md](../README.md).
+2. Run `python .\Journal\journal_server.py`.
+3. Add one manual sample trade and inspect CSV and SQLite outputs.
+
+### Tutorial 2: Backtest To Report
+
+1. Run a workflow from the [Backtesting Guide](../Backtesting/README.md).
+2. Confirm `Journal/trades.csv` was updated.
+3. Run `python .\Journal\analyze_journal.py`.
+
+### Tutorial 3: Review Before Automation
+
+1. Use this module to inspect outcomes after paper-trading or strategy runs.
+2. Read the [Scheduler Guide](../Scheduler/README.md) only after you understand the journal output.
+3. Use the [Applied Upgrades](../upgrades/upgrades.md) log before changing repo structure.
+
 ## What This Folder Is For
 
 Use this folder when you want to:

@@ -10,6 +10,38 @@ If you are new to testing, the short version is simple:
 - a failed test means the code or environment needs attention
 - a skipped test means the test intentionally did not run because a required condition was missing
 
+## Related Repo Guides
+
+- [Root README](../README.md)
+- [Backtesting Guide](../Backtesting/README.md)
+- [Journal Guide](../Journal/README.md)
+- [Scheduler Guide](../Scheduler/README.md)
+- [Learning Roadmap](../Learning%20Roadmap/README.md)
+- [RSI Plus MACD Bot Guide](../rsi_macd_bot/README.md)
+- [BTC Signal Executor Guide](../btc-signal-executor/README.md)
+- [Applied Upgrades](../upgrades/upgrades.md)
+- [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
+
+## Suggested Tutorials
+
+### Tutorial 1: First Safe Verification
+
+1. Complete root setup in [README.md](../README.md).
+2. Run `.\.venv\Scripts\python.exe -m pytest .\Tests -q`.
+3. Read the skip behavior notes in this file before assuming failure.
+
+### Tutorial 2: Strategy Change Validation
+
+1. Update a strategy under [Backtesting](../Backtesting/README.md).
+2. Run the targeted Python tests from this guide.
+3. Review downstream effects in the [Journal Guide](../Journal/README.md).
+
+### Tutorial 3: Automation Validation Path
+
+1. Validate strategy logic here first.
+2. Then move to [Scheduler/README.md](../Scheduler/README.md) or [rsi_macd_bot/README.md](../rsi_macd_bot/README.md).
+3. Review [Applied Upgrades](../upgrades/upgrades.md) before proposing repo-level validation changes.
+
 ## What This Folder Is For
 
 Use this folder when you want to:

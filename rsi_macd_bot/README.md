@@ -6,6 +6,36 @@ This module provides a fully automated RSI plus MACD signal bot built with Alpac
 
 It places market orders when RSI and MACD confirmation occur within a configured window, then places a stop loss after each buy.
 
+## Related Repo Guides
+
+- [Root README](../README.md)
+- [Scheduler Guide](../Scheduler/README.md)
+- [Journal Guide](../Journal/README.md)
+- [Tests Guide](../Tests/README.md)
+- [Learning Roadmap](../Learning%20Roadmap/README.md)
+- [Applied Upgrades](../upgrades/upgrades.md)
+- [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
+
+## Suggested Tutorials
+
+### Tutorial 1: Dependency And Startup Check
+
+1. Install this module's requirements from this guide.
+2. Run the manual validation checklist in [Tests/README.md](../Tests/README.md).
+3. Confirm paper-mode startup before leaving the bot running.
+
+### Tutorial 2: Bot To Journal Review
+
+1. Run `python .\rsi_macd_bot\bot.py`.
+2. Review `rsi_macd_bot/trades.log`.
+3. Cross-check trade review steps in the [Journal Guide](../Journal/README.md).
+
+### Tutorial 3: Scheduled Bot Automation
+
+1. Validate the bot manually first.
+2. Use [Scheduler/README.md](../Scheduler/README.md) for timed-launch patterns.
+3. Review [Applied Upgrades](../upgrades/upgrades.md) before making repo-level bot workflow changes.
+
 ## Purpose
 
 Use this module when you want to:

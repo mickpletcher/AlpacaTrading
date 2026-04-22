@@ -20,6 +20,41 @@ This repository already supports six main workflows:
 
 The repo also includes a modular PowerShell Alpaca client under `src/`, example PowerShell scripts under `examples/`, Python strategy tests, and PowerShell module tests under `Tests/`.
 
+## Repo Guides
+
+- [Repository Audit](docs/repo-audit.md)
+- [Applied Upgrades](upgrades/upgrades.md)
+- [Core Trading Foundation Spec](specs/001-core-trading-foundation/spec.md)
+- [Backtesting Guide](Backtesting/README.md)
+- [Journal Guide](Journal/README.md)
+- [Scheduler Guide](Scheduler/README.md)
+- [Learning Roadmap](Learning%20Roadmap/README.md)
+- [RSI Plus MACD Bot Guide](rsi_macd_bot/README.md)
+- [BTC Signal Executor Guide](btc-signal-executor/README.md)
+- [Tests Guide](Tests/README.md)
+
+## Recommended Tutorials
+
+### Tutorial 1: First Safe Walkthrough
+
+1. Read the [Learning Roadmap](Learning%20Roadmap/README.md).
+2. Complete the root setup steps in this file.
+3. Run `python .\Backtesting\backtest.py`.
+4. Open the [Journal Guide](Journal/README.md) and run the journal app.
+5. Run the [Tests Guide](Tests/README.md) Python checks.
+
+### Tutorial 2: Strategy To Review Loop
+
+1. Use the [Backtesting Guide](Backtesting/README.md) to run one strategy backtest.
+2. Review generated trade output in [Journal](Journal/README.md).
+3. Use the [Scheduler Guide](Scheduler/README.md) only after the manual flow works.
+
+### Tutorial 3: Advanced Automation Paths
+
+1. Read [RSI Plus MACD Bot Guide](rsi_macd_bot/README.md) for a scheduled bot loop.
+2. Read [BTC Signal Executor Guide](btc-signal-executor/README.md) for webhook-based execution.
+3. Review [Applied Upgrades](upgrades/upgrades.md) and the active [spec](specs/001-core-trading-foundation/spec.md) before structural repo changes.
+
 ## Current Architecture
 
 | Area | Current Role | Main Entry Points |
@@ -129,6 +164,7 @@ This repository now includes:
 - `.github/prompts/` for reusable requirements, spec, plan, task, audit, regression, and release prompts
 - `specs/001-core-trading-foundation/` as the baseline spec retrofit for the current repository state
 - `docs/repo-audit.md` as the current repository audit snapshot
+- `upgrades/upgrades.md` as the applied-upgrades log for repo-level improvements
 
 When adding a new feature, create the next numbered folder under `specs/` and keep the change grounded in the current architecture rather than reimagining the project.
 

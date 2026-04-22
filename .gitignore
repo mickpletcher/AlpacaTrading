@@ -27,3 +27,4 @@ Thumbs.db
 *.log
 backtest_results.html
 testResults.xml
+upgrades/future-upgrades.md
