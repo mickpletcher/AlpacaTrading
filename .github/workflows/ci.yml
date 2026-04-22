@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'codex/**'
+  pull_request:
+
+jobs:
+  python-quality:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile Python packages
+        shell: pwsh
+        run: |
+          python -m compileall Alpaca Backtesting Journal rsi_macd_bot btc-signal-executor
+
+      - name: Run pytest
+        shell: pwsh
+        run: |
+          python -m pytest .\Tests -q
+
+  powershell-quality:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Install-Module PSScriptAnalyzer -Force -SkipPublisherCheck -Scope CurrentUser
+
+      - name: Validate module manifests
+        shell: pwsh
+        run: |
+          $manifests = Get-ChildItem .\src -Recurse -Filter *.psd1 -File
+          foreach ($manifest in $manifests) {
+            Test-ModuleManifest -Path $manifest.FullName | Out-Null
+          }
+
+      - name: Import PowerShell modules
+        shell: pwsh
+        run: |
+          $manifests = Get-ChildItem .\src -Recurse -Filter *.psd1 -File
+          foreach ($manifest in $manifests) {
+            Import-Module $manifest.FullName -Force
+          }
+
+      - name: Run script analyzer
+        shell: pwsh
+        run: |
+          Import-Module PSScriptAnalyzer
+          $files = Get-ChildItem .\src,.\Alpaca,.\Backtesting,.\Scheduler,.\examples -Recurse -Include *.ps1,*.psm1 -File | Select-Object -ExpandProperty FullName
+          if (-not $files) {
+            throw 'No PowerShell files found for analysis.'
+          }
+          $results = Invoke-ScriptAnalyzer -Path $files -Settings .\PSScriptAnalyzerSettings.psd1
+          if ($results) {
+            $results | Format-Table RuleName, Severity, ScriptName, Line -AutoSize
+            throw 'PSScriptAnalyzer reported issues.'
+          }
