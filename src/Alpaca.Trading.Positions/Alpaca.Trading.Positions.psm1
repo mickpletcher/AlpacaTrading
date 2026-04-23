@@ -135,7 +135,7 @@ function Close-AlpacaPosition {
         if ($null -eq $result) {
             Write-Verbose "No open position found for $Symbol - nothing to close."
         } else {
-            Write-Verbose "Close order submitted for $Symbol: order=$($result.id)"
+            Write-Verbose "Close order submitted for ${Symbol}: order=$($result.id)"
         }
 
         return $result

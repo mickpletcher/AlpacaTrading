@@ -65,7 +65,11 @@ Start-AlpacaTradeUpdateStream -LogFile $logFile -OnEvent {
     Write-Host ("  Symbol   : {0}"   -f $event.Symbol)
     Write-Host ("  Side     : {0}"   -f $event.Side)
     Write-Host ("  Qty      : {0} (filled {1})" -f $event.Qty, $event.FilledQty)
-    Write-Host ("  Avg Fill : {0}"   -f (if ($event.FilledAvgPx -gt 0) { "`$$($event.FilledAvgPx:N2)" } else { 'n/a' }))
+    $avgFillText = 'n/a'
+    if ($event.FilledAvgPx -gt 0) {
+        $avgFillText = ('${0:N2}' -f $event.FilledAvgPx)
+    }
+    Write-Host ("  Avg Fill : {0}"   -f $avgFillText)
     Write-Host ("  Status   : {0}"   -f $event.Status)
     Write-Host ("  Order ID : {0}"   -f $event.OrderId)
     if ($event.ClientOrderId) {

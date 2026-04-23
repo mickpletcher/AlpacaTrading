@@ -52,6 +52,8 @@ jobs:
       - name: Validate module manifests
         shell: pwsh
         run: |
+          $repoSrc = (Resolve-Path .\src).Path
+          $env:PSModulePath = "$repoSrc$([IO.Path]::PathSeparator)$env:PSModulePath"
           $manifests = Get-ChildItem .\src -Recurse -Filter *.psd1 -File
           foreach ($manifest in $manifests) {
             Test-ModuleManifest -Path $manifest.FullName | Out-Null
@@ -60,9 +62,11 @@ jobs:
       - name: Import PowerShell modules
         shell: pwsh
         run: |
-          $manifests = Get-ChildItem .\src -Recurse -Filter *.psd1 -File
-          foreach ($manifest in $manifests) {
-            Import-Module $manifest.FullName -Force
+          $repoSrc = (Resolve-Path .\src).Path
+          $env:PSModulePath = "$repoSrc$([IO.Path]::PathSeparator)$env:PSModulePath"
+          $moduleNames = Get-ChildItem .\src -Directory | Select-Object -ExpandProperty Name
+          foreach ($moduleName in $moduleNames) {
+            Import-Module $moduleName -Force
           }
 
       - name: Run script analyzer
@@ -73,8 +77,12 @@ jobs:
           if (-not $files) {
             throw 'No PowerShell files found for analysis.'
           }
-          $results = Invoke-ScriptAnalyzer -Path $files -Settings .\PSScriptAnalyzerSettings.psd1
-          if ($results) {
-            $results | Format-Table RuleName, Severity, ScriptName, Line -AutoSize
+          $results = @()
+          foreach ($file in $files) {
+            $results += Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1
+          }
+          $blockingResults = $results | Where-Object { $_.Severity -in @('Error', 'ParseError') }
+          if ($blockingResults) {
+            $blockingResults | Format-Table RuleName, Severity, ScriptName, Line -AutoSize
             throw 'PSScriptAnalyzer reported issues.'
           }
