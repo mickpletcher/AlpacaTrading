@@ -48,6 +48,7 @@ jobs:
         shell: pwsh
         run: |
           Install-Module PSScriptAnalyzer -Force -SkipPublisherCheck -Scope CurrentUser
+          Install-Module Pester -Force -SkipPublisherCheck -Scope CurrentUser -MinimumVersion 5.5.0
 
       - name: Validate module manifests
         shell: pwsh
@@ -86,3 +87,11 @@ jobs:
             $blockingResults | Format-Table RuleName, Severity, ScriptName, Line -AutoSize
             throw 'PSScriptAnalyzer reported issues.'
           }
+
+      - name: Run Pester
+        shell: pwsh
+        run: |
+          $repoSrc = (Resolve-Path .\src).Path
+          $env:PSModulePath = "$repoSrc$([IO.Path]::PathSeparator)$env:PSModulePath"
+          Import-Module Pester -MinimumVersion 5.5.0 -Force
+          Invoke-Pester -Path .\Tests -CI

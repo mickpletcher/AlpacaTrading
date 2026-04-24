@@ -15,7 +15,7 @@ If you are brand new to trading or coding, this is the pace to follow.
 - [Tests Guide](../Tests/README.md)
 - [RSI Plus MACD Bot Guide](../rsi_macd_bot/README.md)
 - [BTC Signal Executor Guide](../btc-signal-executor/README.md)
-- [Applied Upgrades](../upgrades/upgrades.md)
+- [Applied Upgrades](../upgrades/README.md)
 
 ## Suggested Tutorial Paths
 

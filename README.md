@@ -23,7 +23,7 @@ The repo also includes a modular PowerShell Alpaca client under `src/`, example 
 ## Repo Guides
 
 - [Repository Audit](docs/repo-audit.md)
-- [Applied Upgrades](upgrades/upgrades.md)
+- [Applied Upgrades](upgrades/README.md)
 - [Core Trading Foundation Spec](specs/001-core-trading-foundation/spec.md)
 - [Backtesting Guide](Backtesting/README.md)
 - [Journal Guide](Journal/README.md)
@@ -53,7 +53,7 @@ The repo also includes a modular PowerShell Alpaca client under `src/`, example 
 
 1. Read [RSI Plus MACD Bot Guide](rsi_macd_bot/README.md) for a scheduled bot loop.
 2. Read [BTC Signal Executor Guide](btc-signal-executor/README.md) for webhook-based execution.
-3. Review [Applied Upgrades](upgrades/upgrades.md) and the active [spec](specs/001-core-trading-foundation/spec.md) before structural repo changes.
+3. Review [Applied Upgrades](upgrades/README.md) and the active [spec](specs/001-core-trading-foundation/spec.md) before structural repo changes.
 
 ## Current Architecture
 
@@ -164,7 +164,7 @@ This repository now includes:
 - `.github/prompts/` for reusable requirements, spec, plan, task, audit, regression, and release prompts
 - `specs/001-core-trading-foundation/` as the baseline spec retrofit for the current repository state
 - `docs/repo-audit.md` as the current repository audit snapshot
-- `upgrades/upgrades.md` as the applied-upgrades log for repo-level improvements
+- `upgrades/README.md` as the applied-upgrades log for repo-level improvements
 
 When adding a new feature, create the next numbered folder under `specs/` and keep the change grounded in the current architecture rather than reimagining the project.
 

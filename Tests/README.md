@@ -19,7 +19,7 @@ If you are new to testing, the short version is simple:
 - [Learning Roadmap](../Learning%20Roadmap/README.md)
 - [RSI Plus MACD Bot Guide](../rsi_macd_bot/README.md)
 - [BTC Signal Executor Guide](../btc-signal-executor/README.md)
-- [Applied Upgrades](../upgrades/upgrades.md)
+- [Applied Upgrades](../upgrades/README.md)
 - [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
 
 ## Suggested Tutorials
@@ -40,7 +40,7 @@ If you are new to testing, the short version is simple:
 
 1. Validate strategy logic here first.
 2. Then move to [Scheduler/README.md](../Scheduler/README.md) or [rsi_macd_bot/README.md](../rsi_macd_bot/README.md).
-3. Review [Applied Upgrades](../upgrades/upgrades.md) before proposing repo-level validation changes.
+3. Review [Applied Upgrades](../upgrades/README.md) before proposing repo-level validation changes.
 
 ## What This Folder Is For
 
@@ -87,6 +87,12 @@ Additional requirement for `test_connection.py`:
 
 ```powershell
 pytest .\Tests -v
+```
+
+### Run the PowerShell Pester suite
+
+```powershell
+pwsh -NoProfile -Command "Import-Module Pester -MinimumVersion 5.5.0 -Force; Invoke-Pester -Path .\Tests -CI"
 ```
 
 ### Run only the synthetic logic tests
@@ -243,5 +249,6 @@ Do not use it when:
 
 1. The connectivity tests cover basic Alpaca reachability, not complete trade lifecycle validation.
 2. The current tests focus on logic and safety, not full end to end scheduler automation.
+3. The PowerShell suite is standardized on Pester 5.x and should be run with that version in local and CI environments.
 
 <!-- markdownlint-enable MD013 -->

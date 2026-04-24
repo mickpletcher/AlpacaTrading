@@ -13,7 +13,7 @@ It includes a browser based journal, CSV exports, logs, and an HTML summary repo
 - [Scheduler Guide](../Scheduler/README.md)
 - [Tests Guide](../Tests/README.md)
 - [Learning Roadmap](../Learning%20Roadmap/README.md)
-- [Applied Upgrades](../upgrades/upgrades.md)
+- [Applied Upgrades](../upgrades/README.md)
 - [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
 
 ## Suggested Tutorials
@@ -34,7 +34,7 @@ It includes a browser based journal, CSV exports, logs, and an HTML summary repo
 
 1. Use this module to inspect outcomes after paper-trading or strategy runs.
 2. Read the [Scheduler Guide](../Scheduler/README.md) only after you understand the journal output.
-3. Use the [Applied Upgrades](../upgrades/upgrades.md) log before changing repo structure.
+3. Use the [Applied Upgrades](../upgrades/README.md) log before changing repo structure.
 
 ## What This Folder Is For
 

@@ -16,7 +16,7 @@ If you are new to trading, a backtest is a replay of a strategy on historical ma
 - [Journal Guide](../Journal/README.md)
 - [Scheduler Guide](../Scheduler/README.md)
 - [Tests Guide](../Tests/README.md)
-- [Applied Upgrades](../upgrades/upgrades.md)
+- [Applied Upgrades](../upgrades/README.md)
 - [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
 
 ## Suggested Tutorials

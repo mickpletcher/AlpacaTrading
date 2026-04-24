@@ -6,23 +6,18 @@
 .DESCRIPTION
     Tests auth header creation and request wrapper behavior.
     Uses mocking to avoid real API calls.
-
-.EXAMPLE
-    Invoke-Pester .\tests\Test-AlpacaAuth.Tests.ps1 -Output Detailed
 #>
 
-BeforeAll {
-    $repoRoot = Split-Path $PSScriptRoot -Parent
-    Import-Module (Join-Path $repoRoot 'src\Alpaca.Config\Alpaca.Config.psd1') -Force
-    Import-Module (Join-Path $repoRoot 'src\Alpaca.Auth\Alpaca.Auth.psd1')     -Force
-
-    # Prime config with test credentials
-    $env:ALPACA_API_KEY    = 'TEST-API-KEY-001'
-    $env:ALPACA_SECRET_KEY = 'TEST-SECRET-001'
-    Initialize-AlpacaConfig -EnvFilePath 'C:\nonexistent\.env'
-}
+$script:repoRoot = Split-Path $PSScriptRoot -Parent
+Import-Module (Join-Path $script:repoRoot 'src\Alpaca.Config\Alpaca.Config.psd1') -Force
+Import-Module (Join-Path $script:repoRoot 'src\Alpaca.Auth\Alpaca.Auth.psd1') -Force
 
 Describe 'Get-AlpacaAuthHeaders' {
+    BeforeAll {
+        $env:ALPACA_API_KEY = 'TEST-API-KEY-001'
+        $env:ALPACA_SECRET_KEY = 'TEST-SECRET-001'
+        Initialize-AlpacaConfig -EnvFilePath 'C:\nonexistent\.env' | Out-Null
+    }
 
     It 'Returns a hashtable' {
         $h = Get-AlpacaAuthHeaders
@@ -46,13 +41,16 @@ Describe 'Get-AlpacaAuthHeaders' {
 }
 
 Describe 'Invoke-AlpacaRequest' {
+    BeforeAll {
+        $env:ALPACA_API_KEY = 'TEST-API-KEY-001'
+        $env:ALPACA_SECRET_KEY = 'TEST-SECRET-001'
+        Initialize-AlpacaConfig -EnvFilePath 'C:\nonexistent\.env' | Out-Null
+    }
 
     It 'Throws on a non-retryable 400 without retrying' {
-        # Mock Invoke-RestMethod to simulate a 400 Bad Request
         Mock Invoke-RestMethod {
             $response = [System.Net.HttpWebResponse]::new.Invoke(@())
             $ex = [System.Net.WebException]::new('Bad Request')
-            # Simulate error details
             $err = [System.Management.Automation.ErrorRecord]::new(
                 $ex, 'WebCmdletWebResponseException', [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
             )
@@ -64,7 +62,6 @@ Describe 'Invoke-AlpacaRequest' {
     }
 
     It 'Returns null when AllowNotFound is set and server returns 404' {
-        # Simulate a 404 response
         Mock Invoke-RestMethod {
             $webEx = New-Object System.Net.WebException 'Not Found'
             $mockResponse = [PSCustomObject]@{ StatusCode = [System.Net.HttpStatusCode]::NotFound }
@@ -72,25 +69,25 @@ Describe 'Invoke-AlpacaRequest' {
             throw $webEx
         } -ModuleName 'Alpaca.Auth'
 
-        $cfg    = Get-AlpacaConfig
+        $cfg = Get-AlpacaConfig
         $result = Invoke-AlpacaRequest -Method GET -BaseUrl $cfg.TradingBaseUrl -Path '/v2/positions/FAKESYMBOL' -AllowNotFound
         $result | Should -BeNullOrEmpty
     }
 
     It 'Builds correct URI from BaseUrl and Path' {
-        $captured = $null
+        $script:captured = $null
         Mock Invoke-RestMethod {
             param($Method, $Uri, $Headers, $TimeoutSec, $ErrorAction)
             $script:captured = $Uri
             return @{ test = 'value' }
         } -ModuleName 'Alpaca.Auth'
 
-        $cfg = Get-AlpacaConfig
-        Invoke-AlpacaRequest -Method GET -BaseUrl 'https://paper-api.alpaca.markets' -Path '/v2/account'
+        Invoke-AlpacaRequest -Method GET -BaseUrl 'https://paper-api.alpaca.markets' -Path '/v2/account' | Out-Null
         $script:captured | Should -BeLike '*paper-api.alpaca.markets/v2/account*'
     }
 
     It 'Appends query params to the URI correctly' {
+        $script:capturedUri = $null
         Mock Invoke-RestMethod {
             param($Method, $Uri)
             $script:capturedUri = $Uri
@@ -98,17 +95,22 @@ Describe 'Invoke-AlpacaRequest' {
         } -ModuleName 'Alpaca.Auth'
 
         $cfg = Get-AlpacaConfig
-        Invoke-AlpacaRequest -Method GET -BaseUrl $cfg.TradingBaseUrl -Path '/v2/orders' -QueryParams @{ status = 'open'; limit = '10' }
+        Invoke-AlpacaRequest -Method GET -BaseUrl $cfg.TradingBaseUrl -Path '/v2/orders' -QueryParams @{ status = 'open'; limit = '10' } | Out-Null
         $script:capturedUri | Should -Match 'status=open'
         $script:capturedUri | Should -Match 'limit=10'
     }
 }
 
 Describe 'Write-AlpacaLog' {
+    BeforeAll {
+        $env:ALPACA_API_KEY = 'TEST-API-KEY-001'
+        $env:ALPACA_SECRET_KEY = 'TEST-SECRET-001'
+        Initialize-AlpacaConfig -EnvFilePath 'C:\nonexistent\.env' | Out-Null
+    }
 
     It 'Does not throw for all log levels' {
-        { Write-AlpacaLog -Level INFO  -Message 'test info'  } | Should -Not -Throw
-        { Write-AlpacaLog -Level WARN  -Message 'test warn'  } | Should -Not -Throw
+        { Write-AlpacaLog -Level INFO  -Message 'test info' } | Should -Not -Throw
+        { Write-AlpacaLog -Level WARN  -Message 'test warn' } | Should -Not -Throw
         { Write-AlpacaLog -Level ERROR -Message 'test error' } | Should -Not -Throw
         { Write-AlpacaLog -Level DEBUG -Message 'test debug' } | Should -Not -Throw
     }

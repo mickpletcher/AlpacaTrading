@@ -13,7 +13,7 @@ It places market orders when RSI and MACD confirmation occur within a configured
 - [Journal Guide](../Journal/README.md)
 - [Tests Guide](../Tests/README.md)
 - [Learning Roadmap](../Learning%20Roadmap/README.md)
-- [Applied Upgrades](../upgrades/upgrades.md)
+- [Applied Upgrades](../upgrades/README.md)
 - [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
 
 ## Suggested Tutorials
@@ -34,7 +34,7 @@ It places market orders when RSI and MACD confirmation occur within a configured
 
 1. Validate the bot manually first.
 2. Use [Scheduler/README.md](../Scheduler/README.md) for timed-launch patterns.
-3. Review [Applied Upgrades](../upgrades/upgrades.md) before making repo-level bot workflow changes.
+3. Review [Applied Upgrades](../upgrades/README.md) before making repo-level bot workflow changes.
 
 ## Purpose
 

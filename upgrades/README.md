@@ -37,7 +37,7 @@ Added a dedicated `upgrades/` directory to track completed repo upgrades separat
 
 ### What Changed
 
-- created `upgrades/upgrades.md` to track completed repository upgrades
+- created `upgrades/README.md` to track completed repository upgrades
 - created `upgrades/future-upgrades.md` to hold tiered future-upgrade planning
 - updated `.gitignore` so `upgrades/future-upgrades.md` stays local and is not pushed to the repository
 
@@ -49,7 +49,7 @@ Added a dedicated `upgrades/` directory to track completed repo upgrades separat
 
 ## Notes
 
-- `upgrades.md` is for completed or intentionally applied upgrades
+- `README.md` in `upgrades/` is for completed or intentionally applied upgrades
 - `future-upgrades.md` is for backlog planning and local prioritization
 - detailed implementation work for future upgrades should still be routed through numbered spec folders under `specs/`
 

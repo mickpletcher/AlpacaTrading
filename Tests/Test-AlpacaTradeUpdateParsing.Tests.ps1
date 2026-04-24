@@ -6,21 +6,19 @@
 .DESCRIPTION
     Tests the module-private _ConvertTo-TradeUpdateEvent function using
     InModuleScope. No WebSocket connections are made.
-
-.EXAMPLE
-    Invoke-Pester .\tests\Test-AlpacaTradeUpdateParsing.Tests.ps1 -Output Detailed
 #>
 
-$repoRoot = Split-Path $PSScriptRoot -Parent
-Import-Module (Join-Path $repoRoot 'src\Alpaca.Config\Alpaca.Config.psd1')            -Force
-Import-Module (Join-Path $repoRoot 'src\Alpaca.Auth\Alpaca.Auth.psd1')                -Force
-Import-Module (Join-Path $repoRoot 'src\Alpaca.Streams.TradeUpdates\Alpaca.Streams.TradeUpdates.psd1') -Force
-
-$env:ALPACA_API_KEY    = 'TEST-API-KEY-002'
-$env:ALPACA_SECRET_KEY = 'TEST-SECRET-002'
-Initialize-AlpacaConfig -EnvFilePath 'C:\nonexistent\.env'
+$script:repoRoot = Split-Path $PSScriptRoot -Parent
+Import-Module (Join-Path $script:repoRoot 'src\Alpaca.Config\Alpaca.Config.psd1') -Force
+Import-Module (Join-Path $script:repoRoot 'src\Alpaca.Auth\Alpaca.Auth.psd1') -Force
+Import-Module (Join-Path $script:repoRoot 'src\Alpaca.Streams.TradeUpdates\Alpaca.Streams.TradeUpdates.psd1') -Force
 
 Describe '_ConvertTo-TradeUpdateEvent' {
+    BeforeAll {
+        $env:ALPACA_API_KEY = 'TEST-API-KEY-002'
+        $env:ALPACA_SECRET_KEY = 'TEST-SECRET-002'
+        Initialize-AlpacaConfig -EnvFilePath 'C:\nonexistent\.env' | Out-Null
+    }
 
     It 'Parses a fill event correctly' {
         InModuleScope 'Alpaca.Streams.TradeUpdates' {
@@ -35,7 +33,7 @@ Describe '_ConvertTo-TradeUpdateEvent' {
                     filled_qty       = '10'
                     filled_avg_price = '182.50'
                     status           = 'filled'
-                    order_type       = 'market'
+                    type             = 'market'
                     time_in_force    = 'day'
                     limit_price      = $null
                     stop_price       = $null
@@ -47,21 +45,21 @@ Describe '_ConvertTo-TradeUpdateEvent' {
 
             $evt = _ConvertTo-TradeUpdateEvent -Data $raw
 
-            $evt.EventType      | Should Be 'fill'
-            $evt.OrderId        | Should Be 'order-id-fill-001'
-            $evt.ClientOrderId  | Should Be 'coi-fill-001'
-            $evt.Symbol         | Should Be 'AAPL'
-            $evt.Side           | Should Be 'buy'
-            $evt.Qty            | Should Be 10
-            $evt.FilledQty      | Should Be 10
-            $evt.FilledAvgPx    | Should Be 182.50
-            $evt.Status         | Should Be 'filled'
-            $evt.OrderType      | Should Be 'market'
-            $evt.TimeInForce    | Should Be 'day'
-            $evt.LimitPrice     | Should Be $null
-            $evt.StopPrice      | Should Be $null
-            $evt.Price          | Should Be 182.50
-            $evt.PositionQty    | Should Be 10
+            $evt.EventType | Should -Be 'fill'
+            $evt.OrderId | Should -Be 'order-id-fill-001'
+            $evt.ClientOrderId | Should -Be 'coi-fill-001'
+            $evt.Symbol | Should -Be 'AAPL'
+            $evt.Side | Should -Be 'buy'
+            $evt.Qty | Should -Be 10
+            $evt.FilledQty | Should -Be 10
+            $evt.FilledAvgPx | Should -Be 182.50
+            $evt.Status | Should -Be 'filled'
+            $evt.OrderType | Should -Be 'market'
+            $evt.TimeInForce | Should -Be 'day'
+            $evt.LimitPrice | Should -Be $null
+            $evt.StopPrice | Should -Be $null
+            $evt.Price | Should -Be 182.50
+            $evt.PositionQty | Should -Be 10
         }
     }
 
@@ -78,7 +76,7 @@ Describe '_ConvertTo-TradeUpdateEvent' {
                     filled_qty       = '5'
                     filled_avg_price = '310.00'
                     status           = 'partially_filled'
-                    order_type       = 'limit'
+                    type             = 'limit'
                     time_in_force    = 'gtc'
                     limit_price      = '310.00'
                     stop_price       = $null
@@ -90,12 +88,12 @@ Describe '_ConvertTo-TradeUpdateEvent' {
 
             $evt = _ConvertTo-TradeUpdateEvent -Data $raw
 
-            $evt.EventType   | Should Be 'partial_fill'
-            $evt.Symbol      | Should Be 'MSFT'
-            $evt.FilledQty   | Should Be 5
-            $evt.Qty         | Should Be 20
-            $evt.Status      | Should Be 'partially_filled'
-            $evt.LimitPrice  | Should Be 310.00
+            $evt.EventType | Should -Be 'partial_fill'
+            $evt.Symbol | Should -Be 'MSFT'
+            $evt.FilledQty | Should -Be 5
+            $evt.Qty | Should -Be 20
+            $evt.Status | Should -Be 'partially_filled'
+            $evt.LimitPrice | Should -Be 310.00
         }
     }
 
@@ -112,7 +110,7 @@ Describe '_ConvertTo-TradeUpdateEvent' {
                     filled_qty       = '0'
                     filled_avg_price = $null
                     status           = 'canceled'
-                    order_type       = 'limit'
+                    type             = 'limit'
                     time_in_force    = 'day'
                     limit_price      = '200.00'
                     stop_price       = $null
@@ -124,11 +122,12 @@ Describe '_ConvertTo-TradeUpdateEvent' {
 
             $evt = _ConvertTo-TradeUpdateEvent -Data $raw
 
-            $evt.EventType  | Should Be 'canceled'
-            $evt.Symbol     | Should Be 'TSLA'
-            $evt.Status     | Should Be 'canceled'
-            $evt.FilledQty  | Should Be 0
-            $evt.FilledAvgPx | Should Be $null
+            $evt.EventType | Should -Be 'canceled'
+            $evt.Symbol | Should -Be 'TSLA'
+            $evt.Status | Should -Be 'canceled'
+            $evt.FilledQty | Should -Be 0
+            $evt.FilledAvgPx | Should -Be 0
+            $evt.Price | Should -Be $null
         }
     }
 
@@ -145,7 +144,7 @@ Describe '_ConvertTo-TradeUpdateEvent' {
                     filled_qty       = '0'
                     filled_avg_price = $null
                     status           = 'new'
-                    order_type       = 'market'
+                    type             = 'market'
                     time_in_force    = 'day'
                     limit_price      = $null
                     stop_price       = $null
@@ -157,10 +156,11 @@ Describe '_ConvertTo-TradeUpdateEvent' {
 
             $evt = _ConvertTo-TradeUpdateEvent -Data $raw
 
-            $evt.EventType  | Should Be 'new'
-            $evt.Symbol     | Should Be 'SPY'
-            $evt.Status     | Should Be 'new'
-            $evt.FilledQty  | Should Be 0
+            $evt.EventType | Should -Be 'new'
+            $evt.Symbol | Should -Be 'SPY'
+            $evt.Status | Should -Be 'new'
+            $evt.FilledQty | Should -Be 0
+            $evt.PositionQty | Should -Be 0
         }
     }
 
@@ -177,7 +177,7 @@ Describe '_ConvertTo-TradeUpdateEvent' {
                     filled_qty       = '2'
                     filled_avg_price = '900.00'
                     status           = 'filled'
-                    order_type       = 'market'
+                    type             = 'market'
                     time_in_force    = 'day'
                     limit_price      = $null
                     stop_price       = $null
@@ -188,8 +188,8 @@ Describe '_ConvertTo-TradeUpdateEvent' {
             }
 
             $evt = _ConvertTo-TradeUpdateEvent -Data $raw
-            $evt.RawData | Should Not BeNullOrEmpty
-            $evt.RawData.event | Should Be 'fill'
+            $evt.RawData | Should -Not -BeNullOrEmpty
+            $evt.RawData.event | Should -Be 'fill'
         }
     }
 
@@ -206,7 +206,7 @@ Describe '_ConvertTo-TradeUpdateEvent' {
                     filled_qty       = '100'
                     filled_avg_price = '175.50'
                     status           = 'filled'
-                    order_type       = 'market'
+                    type             = 'market'
                     time_in_force    = 'day'
                     limit_price      = $null
                     stop_price       = $null
@@ -217,9 +217,9 @@ Describe '_ConvertTo-TradeUpdateEvent' {
             }
 
             $evt = _ConvertTo-TradeUpdateEvent -Data $raw
-            $evt.Qty.GetType().Name | Should Be 'Double'
-            $evt.FilledQty.GetType().Name | Should Be 'Double'
-            $evt.FilledAvgPx.GetType().Name | Should Be 'Double'
+            $evt.Qty.GetType().Name | Should -Be 'Double'
+            $evt.FilledQty.GetType().Name | Should -Be 'Double'
+            $evt.FilledAvgPx.GetType().Name | Should -Be 'Double'
         }
     }
 }

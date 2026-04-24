@@ -14,7 +14,7 @@ If you are new to scheduling, think of this as a timed launcher. It does not inv
 - [RSI Plus MACD Bot Guide](../rsi_macd_bot/README.md)
 - [BTC Signal Executor Guide](../btc-signal-executor/README.md)
 - [Tests Guide](../Tests/README.md)
-- [Applied Upgrades](../upgrades/upgrades.md)
+- [Applied Upgrades](../upgrades/README.md)
 
 ## Suggested Tutorials
 
@@ -34,7 +34,7 @@ If you are new to scheduling, think of this as a timed launcher. It does not inv
 
 1. For continuous bot workflows, use [rsi_macd_bot/README.md](../rsi_macd_bot/README.md).
 2. For externally triggered execution, use [btc-signal-executor/README.md](../btc-signal-executor/README.md).
-3. For repo-level changes to scheduling conventions, review [Applied Upgrades](../upgrades/upgrades.md).
+3. For repo-level changes to scheduling conventions, review [Applied Upgrades](../upgrades/README.md).
 
 ## What This Folder Is For
 

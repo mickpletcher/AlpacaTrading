@@ -12,7 +12,7 @@ No UI, no approval step, no retry logic, and no database.
 - [Scheduler Guide](../Scheduler/README.md)
 - [Journal Guide](../Journal/README.md)
 - [Tests Guide](../Tests/README.md)
-- [Applied Upgrades](../upgrades/upgrades.md)
+- [Applied Upgrades](../upgrades/README.md)
 - [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
 
 ## Suggested Tutorials
