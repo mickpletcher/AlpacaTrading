@@ -2,7 +2,7 @@
 # Install with: python -m pip install -r requirements.txt
 
 # Official Alpaca SDK used by trading, market data, and live runner scripts.
-alpaca-py==0.43.2
+alpaca-py==0.44.0
 
 # Core dataframe library used across backtests, indicators, journal summaries, and tests.
 pandas==3.0.6
