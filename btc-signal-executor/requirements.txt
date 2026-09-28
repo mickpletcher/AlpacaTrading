@@ -3,3 +3,4 @@ uvicorn==0.35.0
 alpaca-py==0.43.2
 pydantic==2.12.5
 python-dotenv==1.2.2
+httpx==0.28.1

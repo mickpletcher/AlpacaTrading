@@ -1,254 +1,141 @@
-<!-- markdownlint-disable MD013 -->
+<!-- markdownlint-disable MD013 MD024 MD060 -->
 
-# Tests Module
+# Validation
 
-This folder contains automated checks for strategy logic and Alpaca connectivity.
+This file is the authoritative validation procedure. Per-change results belong in the completion report, commit, or pull request. They do not accumulate here.
 
-If you are new to testing, the short version is simple:
+## Environment Requirements
 
-- a passed test means the check succeeded
-- a failed test means the code or environment needs attention
-- a skipped test means the test intentionally did not run because a required condition was missing
+- Python matching the supported CI version when release confidence is required. CI currently uses Python 3.13.
+- PowerShell 7.
+- Pester 5.5 or newer.
+- PSScriptAnalyzer.
+- No live Alpaca credentials in the default validation environment.
 
-## Related Repo Guides
-
-- [Root README](../README.md)
-- [Backtesting Guide](../Backtesting/README.md)
-- [Journal Guide](../Journal/README.md)
-- [Scheduler Guide](../Scheduler/README.md)
-- [Learning Roadmap](../Learning%20Roadmap/README.md)
-- [RSI Plus MACD Bot Guide](../rsi_macd_bot/README.md)
-- [BTC Signal Executor Guide](../btc-signal-executor/README.md)
-- [Applied Upgrades](../upgrades/README.md)
-- [Core Trading Foundation Spec](../specs/001-core-trading-foundation/spec.md)
-
-## Suggested Tutorials
-
-### Tutorial 1: First Safe Verification
-
-1. Complete root setup in [README.md](../README.md).
-2. Run `.\.venv\Scripts\python.exe -m pytest .\Tests -q`.
-3. Read the skip behavior notes in this file before assuming failure.
-
-### Tutorial 2: Strategy Change Validation
-
-1. Update a strategy under [Backtesting](../Backtesting/README.md).
-2. Run the targeted Python tests from this guide.
-3. Review downstream effects in the [Journal Guide](../Journal/README.md).
-
-### Tutorial 3: Automation Validation Path
-
-1. Validate strategy logic here first.
-2. Then move to [Scheduler/README.md](../Scheduler/README.md) or [rsi_macd_bot/README.md](../rsi_macd_bot/README.md).
-3. Review [Applied Upgrades](../upgrades/README.md) before proposing repo-level validation changes.
-
-## What This Folder Is For
-
-Use this folder when you want to:
-
-- confirm the strategy rules behave as expected on synthetic data
-- check that Alpaca paper credentials and basic endpoints work
-- validate the repo before making changes
-
-Do not use this folder when you only need:
-
-- a one off manual script run
-- scheduler setup
-- browser journal usage
-
-## Files and What They Validate
-
-| File | What It Checks | Requires Alpaca? |
-| --- | --- | --- |
-| `test_connection.py` | credentials present, account endpoint, market clock endpoint | Yes |
-| `test_ema_crossover.py` | EMA buy and sell signals, gating, no double signal behavior | No |
-| `test_bollinger_rsi.py` | Bollinger plus RSI indicator columns, signal rules, position gating | No |
-| `test_gap_momentum.py` | gap detection, momentum confirmation, volume checks, stop loss, take profit, end of day exit | No |
-| `test_rsi_stack.py` | multi timeframe RSI calculation, alignment, stack score, signal gating | No |
-
-## Prerequisites
-
-- Python virtual environment activated
-- dependencies installed from `requirements.txt`
-
-Additional requirement for `test_connection.py`:
-
-- `.env` file with valid Alpaca paper trading credentials
-
-## Setup Steps
-
-1. activate `.venv`
-2. install dependencies from `requirements.txt`
-3. if you want live Alpaca connectivity tests, create `.env`
-
-## Run Commands
-
-### Run all tests
+Create a clean virtual environment before dependency or release validation:
 
 ```powershell
-pytest .\Tests -v
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r .\requirements.txt -r .\rsi_macd_bot\requirements.txt -r .\btc-signal-executor\requirements.txt
 ```
 
-### Run the PowerShell Pester suite
+## Basic Validation
+
+Use for documentation, internal tooling, and low-risk refactors.
+
+### Python syntax
+
+```powershell
+python -m compileall -q Alpaca Backtesting Journal rsi_macd_bot btc-signal-executor
+```
+
+Expected exit code: 0. Typical runtime: under one minute.
+
+### Python unit tests
+
+```powershell
+python -m pytest .\Tests -q
+```
+
+Expected exit code: 0. Credential-dependent tests may skip. Every completion report must state the skip count and reason.
+
+### PowerShell module validation
+
+```powershell
+$repoSrc = (Resolve-Path .\src).Path
+$env:PSModulePath = "$repoSrc$([IO.Path]::PathSeparator)$env:PSModulePath"
+Get-ChildItem .\src -Recurse -Filter *.psd1 -File | ForEach-Object {
+    Test-ModuleManifest -Path $_.FullName | Out-Null
+}
+Get-ChildItem .\src -Directory | ForEach-Object {
+    Import-Module $_.Name -Force
+}
+```
+
+Expected exit code: 0 with no import errors.
+
+### Documentation compliance
+
+```powershell
+pwsh -NoProfile -File .\scripts\docs-check.ps1 -FailOnGap
+```
+
+Expected exit code: 0 with no `MISSING` or `REVIEW` rows.
+
+## Full Static Validation
+
+```powershell
+Import-Module PSScriptAnalyzer
+$files = Get-ChildItem .\src,.\Alpaca,.\Backtesting,.\Scheduler,.\examples -Recurse -Include *.ps1,*.psm1 -File
+$results = $files | ForEach-Object {
+    Invoke-ScriptAnalyzer -Path $_.FullName -Settings .\PSScriptAnalyzerSettings.psd1
+}
+$results | Group-Object RuleName,Severity | Sort-Object Count -Descending
+```
+
+Expected result: no `Error` or `ParseError`. Existing warnings are tracked under TD-004 and must be reported, not hidden.
+
+## Pester Isolation
+
+Risk tests inject Pester's temporary test directory into `Initialize-AlpacaRisk`. Authentication tests inject a local request implementation into `Invoke-AlpacaRequest`. The default suite must not alter `Journal/alpaca_risk_state.json` or make an outbound request.
+
+The command is:
 
 ```powershell
 pwsh -NoProfile -Command "Import-Module Pester -MinimumVersion 5.5.0 -Force; Invoke-Pester -Path .\Tests -CI"
 ```
 
-### Run only the synthetic logic tests
+For changes to either injection boundary, compare the operational risk-state hash before and after the suite and inspect the test implementation for direct network calls.
+
+## Integration Validation
+
+Credential-dependent checks use an Alpaca paper account only:
 
 ```powershell
-pytest .\Tests\test_ema_crossover.py -v
-pytest .\Tests\test_bollinger_rsi.py -v
-pytest .\Tests\test_gap_momentum.py -v
-pytest .\Tests\test_rsi_stack.py -v
+python -m pytest .\Tests\test_connection.py -v
 ```
 
-### Run only the Alpaca connectivity test
+Expected exit code: 0. Without `ALPACA_API_KEY` and `ALPACA_SECRET_KEY`, the tests skip. Record that as a waiver for changes that require provider-contract assurance.
+
+Do not submit orders merely to prove connectivity.
+
+## Component Validation
+
+| Component | Automated validation | Additional procedure |
+|---|---|---|
+| Shared strategies | `Tests/test_*.py` | Run the affected backtest with synthetic or paper data |
+| PowerShell modules | Manifests, imports, analyzer, isolated Pester | Use examples only with paper credentials |
+| Journal | `Tests/test_journal.py` | Preserve data and start locally for UI checks |
+| Scheduler | `Tests/test_scheduler.py` | Run manually under the intended account and inspect exit log |
+| RSI and MACD bot | `Tests/test_execution_surfaces.py`, `Tests/test_trading_safety.py` | Paper-only dry run and log review |
+| BTC executor | `Tests/test_btc_signal_executor.py`, `Tests/test_trading_safety.py` | Use fake clients by default; paper integration requires dedicated credentials |
+
+## Dependency Validation
 
 ```powershell
-pytest .\Tests\test_connection.py -v
+python -m pip check
 ```
 
-## Manual Validation for RSI Plus MACD Bot
+Expected exit code: 0 in a clean supported environment. Dependabot and CodeQL provide hosted dependency and code scanning after changes reach GitHub.
 
-Automated tests for `rsi_macd_bot` are not in this repo yet, so use this manual checklist after any bot logic changes.
+## Validation Matrix
 
-### Quick environment check
+| Change type | Class | Unit | Integration | Security | Smoke |
+|---|---|---|---|---|---|
+| Documentation only | 1 | No | No | No | Documentation check |
+| Internal refactor | 2 | Yes | As needed | No | Yes |
+| Test-only | 2 | Target suite | No | No | As needed |
+| Bug fix | 3 | Yes | As needed | As needed | Yes |
+| Interface or configuration | 3 | Yes | Yes | As needed | Yes |
+| Dependency | 3 | Yes | Yes | Yes | Yes |
+| Architecture, security, deployment | 4 | Yes | Yes | Yes | Yes |
 
-```powershell
-python -c "import importlib.util as u;mods=['alpaca','pandas','schedule','dotenv','pandas_ta'];print({m: bool(u.find_spec(m)) for m in mods})"
-```
+## Known Validation Limitations
 
-Expected output:
+- Live Alpaca integration is absent from default checks because credentials are intentionally unavailable.
+- Distributed webhook rate limiting and replay storage are not tested because the service is currently single-process.
+- Backtest quality remains research grade. See TD-006.
 
-```text
-{'alpaca': True, 'pandas': True, 'schedule': True, 'dotenv': True, 'pandas_ta': True}
-```
-
-### Syntax check
-
-```powershell
-python -m compileall .\rsi_macd_bot
-```
-
-Expected output:
-
-```text
-Compiling '.\\rsi_macd_bot\\bot.py'...
-...
-```
-
-### Dry startup check in paper mode
-
-1. ensure `.env` has valid paper credentials and `PAPER=true`
-2. run `python .\rsi_macd_bot\bot.py`
-3. let it run for one or two scan cycles
-4. stop with `Ctrl+C`
-
-Expected behavior:
-
-- bot starts without crashing
-- market closed cycles log as skip events outside market hours
-- open positions summary is logged on shutdown
-- no unhandled traceback appears
-
-### Log verification
-
-Check `rsi_macd_bot/trades.log` for rows matching the expected format:
-
-```text
-[TIMESTAMP] SYMBOL | SIGNAL | ACTION | QTY | PRICE | RSI | MACD_HIST
-```
-
-Confirm at least these action patterns appear during test runs:
-
-- `NO_ACTION`
-- `SKIP_ALREADY_OPEN` or `SKIP_NO_POSITION`
-- `ORDER_PLACED` when signal conditions and account state permit orders
-
-### Risk guard verification
-
-Before unattended runs, confirm:
-
-1. `PAPER=true`
-2. `POSITION_SIZE_PCT` is small enough for safe paper testing
-3. `MAX_OPEN_TRADES` is set to a conservative value
-4. stop loss submissions are present in logs after buy fills
-
-## Example Usage
-
-### Example 1: Safe first test run without Alpaca credentials
-
-```powershell
-pytest .\Tests\test_ema_crossover.py -v
-```
-
-Expected output:
-
-```text
-... PASSED
-```
-
-### Example 2: Connectivity test with `.env`
-
-```powershell
-pytest .\Tests\test_connection.py -v
-```
-
-Expected output when configured correctly:
-
-```text
-test_credentials_present PASSED
-test_account_endpoint_returns_200 PASSED
-test_clock_endpoint_contains_is_open PASSED
-```
-
-## What a Skipped Test Means
-
-In this repo, a skipped test most often means:
-
-- you ran `test_connection.py`
-- `ALPACA_API_KEY` or `ALPACA_SECRET_KEY` was not set
-- pytest intentionally did not call Alpaca
-
-That is normal behavior when credentials are missing.
-
-It is not the same as a failing test.
-
-## Common Mistakes
-
-- assuming all tests require live API access
-- treating a skip as a failure
-- forgetting to activate `.venv`
-- running the connectivity test with live keys when you meant to use paper keys
-
-## Troubleshooting
-
-| Problem | Likely Cause | Fix |
-| --- | --- | --- |
-| tests fail to import modules | dependencies are missing | reinstall with `python -m pip install -r requirements.txt` |
-| `test_connection.py` is skipped | credentials are not set | create `.env` and add Alpaca paper keys |
-| connectivity test fails with `401` or `403` | wrong keys or wrong URL | confirm paper keys and paper base URL |
-| strategy tests fail after code changes | logic or expected behavior changed | inspect the specific failing test and the related strategy file |
-
-## When to Use This Module
-
-Use it when:
-
-- you changed code
-- you want a confidence check before scheduling or paper trading
-- you want fast feedback on strategy behavior
-
-Do not use it when:
-
-- you expect tests alone to prove profitability
-- you have not completed basic setup
-
-## TODO and Known Gaps
-
-1. The connectivity tests cover basic Alpaca reachability, not complete trade lifecycle validation.
-2. The current tests focus on logic and safety, not full end to end scheduler automation.
-3. The PowerShell suite is standardized on Pester 5.x and should be run with that version in local and CI environments.
-
-<!-- markdownlint-enable MD013 -->
+<!-- markdownlint-enable MD013 MD024 MD060 -->

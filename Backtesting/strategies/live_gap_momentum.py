@@ -36,13 +36,12 @@ if str(ALPACA_DIR) not in sys.path:
 
 from circuit_breaker import is_safe_to_trade
 from gap_momentum import EOD_EXIT, SCAN_END, SCAN_START, GapMomentum
+from trading_safety import PaperTradingClient, require_paper_mode
 
 ET_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
 
-PAPER_TRADING = True
-PAPER_URL = "https://paper-api.alpaca.markets"
-LIVE_URL = "https://api.alpaca.markets"
+PAPER_URL = require_paper_mode()
 
 SYMBOL = "SPY"
 GAP_THRESHOLD = 0.02
@@ -83,8 +82,7 @@ def append_trade_rows(
     exit_reason: str,
 ) -> None:
     ensure_journal_file()
-    note_prefix = "paper" if PAPER_TRADING else "live"
-    note_value = f"live_gap_momentum_{note_prefix}_{exit_reason}"
+    note_value = f"live_gap_momentum_paper_{exit_reason}"
     trade_date = et_now().date().isoformat()
 
     with JOURNAL_CSV.open("a", encoding="utf-8", newline="") as csv_file:
@@ -414,21 +412,16 @@ def run_hold_phase(
 
 def main() -> int:
     try:
-        if not PAPER_TRADING:
-            print("WARNING: PAPER_TRADING is False. LIVE ORDER ROUTING IS ENABLED.")
-            print("WARNING: REVIEW SETTINGS BEFORE CONTINUING.")
-
         safe_to_trade, safe_reason = is_safe_to_trade()
         if not safe_to_trade:
             log_message(f"Circuit breaker blocked startup: {safe_reason}")
             return 0
 
         api_key, secret_key = load_credentials()
-        trading_client = TradingClient(api_key=api_key, secret_key=secret_key, paper=PAPER_TRADING)
+        trading_client = PaperTradingClient(api_key=api_key, secret_key=secret_key)
         data_client = StockHistoricalDataClient(api_key=api_key, secret_key=secret_key)
 
-        base_url = PAPER_URL if PAPER_TRADING else LIVE_URL
-        log_message(f"Session started. base_url={base_url}")
+        log_message(f"Session started. base_url={PAPER_URL}")
 
         prior_close, avg_daily_volume = fetch_daily_context(data_client, SYMBOL)
         log_message(f"Startup context prior_close={prior_close:.4f} avg_daily_volume={avg_daily_volume:.0f}")

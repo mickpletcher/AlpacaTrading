@@ -22,11 +22,8 @@ def get_open_position(trading_client: TradingClient, symbol: str):
 
 
 def get_open_trades_count(trading_client: TradingClient) -> int:
-    try:
-        positions = trading_client.get_all_positions()
-        return len(positions)
-    except Exception:
-        return 0
+    positions = trading_client.get_all_positions()
+    return len(positions)
 
 
 def calculate_qty(symbol: str, equity: float, pct: float, last_price: float) -> float:

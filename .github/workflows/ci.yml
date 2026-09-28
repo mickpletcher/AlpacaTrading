@@ -25,7 +25,7 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements.txt -r rsi_macd_bot/requirements.txt -r btc-signal-executor/requirements.txt
 
       - name: Compile Python packages
         shell: pwsh
@@ -36,6 +36,11 @@ jobs:
         shell: pwsh
         run: |
           python -m pytest .\Tests -q
+
+      - name: Validate installed dependencies
+        shell: pwsh
+        run: |
+          python -m pip check
 
   powershell-quality:
     runs-on: windows-latest
@@ -95,3 +100,15 @@ jobs:
           $env:PSModulePath = "$repoSrc$([IO.Path]::PathSeparator)$env:PSModulePath"
           Import-Module Pester -MinimumVersion 5.5.0 -Force
           Invoke-Pester -Path .\Tests -CI
+
+  documentation-quality:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate documentation authorities
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File .\scripts\docs-check.ps1 -FailOnGap

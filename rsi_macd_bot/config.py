@@ -1,11 +1,19 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+ALPACA_DIR = Path(__file__).resolve().parent.parent / "Alpaca"
+if str(ALPACA_DIR) not in sys.path:
+    sys.path.insert(0, str(ALPACA_DIR))
+
+from trading_safety import require_paper_mode
 
 
 @dataclass(frozen=True)
@@ -30,6 +38,11 @@ def _env_bool(name: str, default: bool) -> bool:
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "y"}
+
+
+def _paper_mode() -> bool:
+    require_paper_mode(paper=_env_bool("PAPER", True))
+    return True
 
 
 WATCHLIST = ["AAPL", "TSLA", "SPY"]
@@ -60,5 +73,5 @@ def get_config() -> BotConfig:
         position_size_pct=POSITION_SIZE_PCT,
         max_open_trades=MAX_OPEN_TRADES,
         risk_per_trade=RISK_PER_TRADE,
-        paper=_env_bool("PAPER", True),
+        paper=_paper_mode(),
     )

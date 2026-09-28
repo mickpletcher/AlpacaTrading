@@ -2,7 +2,7 @@
 
 # BTC Signal Executor
 
-Fully automated TradingView webhook receiver for BTC or crypto signals with immediate Alpaca execution.
+Paper-only TradingView webhook receiver for bounded BTC signals with immediate Alpaca paper execution.
 
 No UI, no approval step, no retry logic, and no database.
 
@@ -29,17 +29,20 @@ No UI, no approval step, no retry logic, and no database.
 2. Send the curl-based buy, sell, and close tests from this guide.
 3. Review `executor.log` and your Alpaca paper activity.
 
-### Tutorial 3: Internet-Exposed Testing
+### Tutorial 3: Controlled Ingress Testing
 
 1. Validate local behavior first.
 2. Use the ngrok section in this guide.
-3. Compare this module with scheduled flows in the [Scheduler Guide](../Scheduler/README.md).
+3. Put TLS and an allowlisted reverse proxy in front of the service. Do not expose Uvicorn directly.
 
 ## Features
 
 - FastAPI webhook endpoint at `POST /webhook`
 - Strict payload validation with pydantic
 - Shared secret passphrase check
+- BTC symbol allowlist, quantity and notional caps
+- Timestamp freshness, replay detection, request rate limiting, and an execution circuit breaker
+- Account daily-loss gate for new buy orders
 - Immediate buy, sell, or close execution via Alpaca
 - Failure safe webhook response rules to prevent TradingView alert spam
 - Logging to `executor.log` and stdout
@@ -83,6 +86,15 @@ ALPACA_SECRET_KEY=
 ALPACA_BASE_URL=https://paper-api.alpaca.markets
 WEBHOOK_PASSPHRASE=
 PORT=8080
+WEBHOOK_ALLOWED_TICKERS=BTCUSD,BTC/USD
+WEBHOOK_MAX_QUANTITY=0.01
+WEBHOOK_MAX_NOTIONAL=1000
+WEBHOOK_MAX_DAILY_LOSS=250
+WEBHOOK_MAX_SIGNAL_AGE_SECONDS=300
+WEBHOOK_RATE_LIMIT_PER_MINUTE=10
+WEBHOOK_FAILURE_THRESHOLD=3
+WEBHOOK_FAILURE_RESET_SECONDS=300
+WEBHOOK_REPLAY_DB_PATH=runtime/webhook_state.db
 ```
 
 ## Run Server
@@ -122,6 +134,8 @@ Payload:
 ```json
 {
   "passphrase": "YOUR_SECRET",
+  "signal_id": "strategy-alert-unique-id",
+  "timestamp": "2026-09-28T19:00:00Z",
   "ticker": "BTCUSD",
   "action": "buy",
   "price": 67000.00,
@@ -139,10 +153,10 @@ Accepted `action` values:
 
 ## Execution Rules
 
-- `buy` sends a market buy order with fractional quantity
-- `sell` sends market sell if shorting is enabled, else closes long position
+- `buy` sends a GTC market buy order with fractional quantity
+- `sell` sends a GTC market sell for the supplied quantity
 - `close` attempts to flatten full symbol position via `close_position()`
-- unknown action is logged and skipped
+- unknown actions fail validation
 - no automatic retry logic
 
 ## End to End Webhook Tests
@@ -154,7 +168,7 @@ Run these while the server is active.
 ```bash
 curl -X POST http://127.0.0.1:8080/webhook \
   -H "Content-Type: application/json" \
-  -d '{"passphrase":"YOUR_SECRET","ticker":"BTCUSD","action":"buy","price":67000.00,"quantity":0.001}'
+  -d '{"passphrase":"YOUR_SECRET","signal_id":"manual-buy-001","timestamp":"2026-09-28T19:00:00Z","ticker":"BTCUSD","action":"buy","price":67000.00,"quantity":0.001}'
 ```
 
 ### Valid sell
@@ -162,7 +176,7 @@ curl -X POST http://127.0.0.1:8080/webhook \
 ```bash
 curl -X POST http://127.0.0.1:8080/webhook \
   -H "Content-Type: application/json" \
-  -d '{"passphrase":"YOUR_SECRET","ticker":"BTCUSD","action":"sell","price":67050.00,"quantity":0.001}'
+  -d '{"passphrase":"YOUR_SECRET","signal_id":"manual-sell-001","timestamp":"2026-09-28T19:00:00Z","ticker":"BTCUSD","action":"sell","price":67050.00,"quantity":0.001}'
 ```
 
 ### Valid close
@@ -170,7 +184,7 @@ curl -X POST http://127.0.0.1:8080/webhook \
 ```bash
 curl -X POST http://127.0.0.1:8080/webhook \
   -H "Content-Type: application/json" \
-  -d '{"passphrase":"YOUR_SECRET","ticker":"BTCUSD","action":"close","price":67050.00,"quantity":0.001}'
+  -d '{"passphrase":"YOUR_SECRET","signal_id":"manual-close-001","timestamp":"2026-09-28T19:00:00Z","ticker":"BTCUSD","action":"close","price":67050.00,"quantity":0.001}'
 ```
 
 ### Unauthorized request
@@ -178,7 +192,7 @@ curl -X POST http://127.0.0.1:8080/webhook \
 ```bash
 curl -X POST http://127.0.0.1:8080/webhook \
   -H "Content-Type: application/json" \
-  -d '{"passphrase":"wrong","ticker":"BTCUSD","action":"buy","price":67000.00,"quantity":0.001}'
+  -d '{"passphrase":"wrong","signal_id":"manual-bad-001","timestamp":"2026-09-28T19:00:00Z","ticker":"BTCUSD","action":"buy","price":67000.00,"quantity":0.001}'
 ```
 
 Expected result: HTTP `401`.
@@ -197,8 +211,10 @@ Expected result: HTTP `422`.
 
 - invalid passphrase returns `401`
 - malformed or missing required fields return `422`
+- duplicate signal IDs return `409`
+- request rate violations return `429`
+- an open execution circuit breaker returns `503` for buys
 - Alpaca API errors are logged and still return `200`
-- unknown action is logged and returns `200`
 
 This is intentional to avoid TradingView retry loops that can spam alerts.
 
@@ -211,6 +227,8 @@ Buy template:
 ```json
 {
   "passphrase": "YOUR_SECRET",
+  "signal_id": "{{strategy.order.id}}-{{timenow}}",
+  "timestamp": "{{timenow}}",
   "ticker": "BTCUSD",
   "action": "buy",
   "price": {{close}},
@@ -223,6 +241,8 @@ Sell template:
 ```json
 {
   "passphrase": "YOUR_SECRET",
+  "signal_id": "{{strategy.order.id}}-{{timenow}}",
+  "timestamp": "{{timenow}}",
   "ticker": "BTCUSD",
   "action": "sell",
   "price": {{close}},
@@ -235,6 +255,8 @@ Close template:
 ```json
 {
   "passphrase": "YOUR_SECRET",
+  "signal_id": "{{strategy.order.id}}-{{timenow}}",
+  "timestamp": "{{timenow}}",
   "ticker": "BTCUSD",
   "action": "close",
   "price": {{close}},
@@ -255,6 +277,8 @@ Alert message body template to paste in TradingView:
 ```json
 {
   "passphrase": "YOUR_SECRET",
+  "signal_id": "{{strategy.order.id}}-{{timenow}}",
+  "timestamp": "{{timenow}}",
   "ticker": "BTCUSD",
   "action": "buy",
   "price": {{close}},
@@ -264,7 +288,7 @@ Alert message body template to paste in TradingView:
 
 Set `YOUR_SECRET` to match `WEBHOOK_PASSPHRASE` in `.env`.
 
-If TradingView and your server are on different networks, use a public URL from reverse proxy or ngrok.
+If TradingView and your server are on different networks, use a TLS reverse proxy with source filtering and external request limits. Do not publish the Uvicorn port directly.
 
 ## Deployment Notes
 
@@ -304,21 +328,13 @@ Log tail command:
 sudo journalctl -u btc-signal-executor -f
 ```
 
-### Switch from paper to live
-
-Change one `.env` line:
-
-```dotenv
-ALPACA_BASE_URL=https://api.alpaca.markets
-```
-
 ### Expose local server with ngrok
 
 ```bash
 ngrok http 8080
 ```
 
-Use the HTTPS forwarding URL from ngrok as the TradingView webhook URL.
+Use ngrok only for short-lived paper-account testing. Apply ngrok access controls and stop the tunnel immediately afterward.
 
 ## Operations Runbook
 

@@ -17,12 +17,13 @@
 """
 
 from flask import Flask, Response, jsonify, request, send_from_directory
+import argparse
 import sqlite3
 import io
 from datetime import datetime
 from pathlib import Path
 
-from journal_store import CSV_PATH, JOURNAL_DIR, ensure_trade_table, get_db_connection, sync_csv_to_sqlite, sync_sqlite_to_csv
+from journal_store import CSV_PATH, JOURNAL_DIR, ensure_trade_table, get_db_connection, import_csv_to_sqlite, sync_sqlite_to_csv
 
 app = Flask(__name__, static_folder=str(JOURNAL_DIR))
 
@@ -33,12 +34,17 @@ app = Flask(__name__, static_folder=str(JOURNAL_DIR))
 def init_db():
     conn = get_db_connection()
     ensure_trade_table(conn)
-    sync_csv_to_sqlite(conn)
     conn.close()
 
 
 def get_db():
     return get_db_connection()
+
+
+@app.before_request
+def require_loopback():
+    if request.remote_addr not in {"127.0.0.1", "::1"}:
+        return jsonify({"error": "Journal access is limited to loopback clients."}), 403
 
 
 # ─────────────────────────────────────────────
@@ -73,6 +79,26 @@ def calc_rr(entry, stop_loss, target, direction):
     return round(reward / risk, 2)
 
 
+def validate_trade_payload(data):
+    if not isinstance(data, dict):
+        raise ValueError("JSON object required")
+    required = {"ticker", "direction", "entry", "qty"}
+    missing = sorted(required - data.keys())
+    if missing:
+        raise ValueError(f"Missing required fields: {', '.join(missing)}")
+    ticker = str(data["ticker"]).strip().upper()
+    direction = str(data["direction"]).strip().upper()
+    if not ticker or len(ticker) > 20:
+        raise ValueError("ticker must contain 1 to 20 characters")
+    if direction not in {"LONG", "SHORT"}:
+        raise ValueError("direction must be LONG or SHORT")
+    entry = float(data["entry"])
+    qty = int(data["qty"])
+    if entry <= 0 or qty <= 0:
+        raise ValueError("entry and qty must be greater than zero")
+    return ticker, direction, entry, qty
+
+
 # ─────────────────────────────────────────────
 # API ROUTES
 # ─────────────────────────────────────────────
@@ -80,7 +106,6 @@ def calc_rr(entry, stop_loss, target, direction):
 @app.route("/api/trades", methods=["GET"])
 def get_trades():
     conn = get_db()
-    sync_csv_to_sqlite(conn)
     trades = conn.execute(
         "SELECT * FROM trades ORDER BY date DESC, created_at DESC"
     ).fetchall()
@@ -90,13 +115,14 @@ def get_trades():
 
 @app.route("/api/trades", methods=["POST"])
 def add_trade():
-    data = request.json
-    entry      = float(data["entry"])
-    exit_price = float(data["exit"]) if data.get("exit") else None
-    qty        = int(data["qty"])
-    direction  = data["direction"]
-    stop_loss  = float(data["stop_loss"]) if data.get("stop_loss") else None
-    target     = float(data["target"]) if data.get("target") else None
+    data = request.get_json(silent=True)
+    try:
+        ticker, direction, entry, qty = validate_trade_payload(data)
+        exit_price = float(data["exit"]) if data.get("exit") else None
+        stop_loss = float(data["stop_loss"]) if data.get("stop_loss") else None
+        target = float(data["target"]) if data.get("target") else None
+    except (TypeError, ValueError) as exc:
+        return jsonify({"error": str(exc)}), 400
 
     pnl    = calc_pnl(direction, entry, exit_price, qty)
     result = calc_result(pnl)
@@ -109,7 +135,7 @@ def add_trade():
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         data.get("date", datetime.now().strftime("%Y-%m-%d")),
-        data["ticker"].upper(),
+        ticker,
         direction,
         entry,
         exit_price,
@@ -134,13 +160,18 @@ def add_trade():
 @app.route("/api/trades/<int:trade_id>", methods=["PUT"])
 def update_trade(trade_id):
     """Close an open trade by adding exit price."""
-    data       = request.json
-    exit_price = float(data["exit"])
+    data = request.get_json(silent=True)
+    try:
+        exit_price = float(data["exit"])
+        if exit_price <= 0:
+            raise ValueError("exit must be greater than zero")
+    except (KeyError, TypeError, ValueError) as exc:
+        return jsonify({"error": str(exc)}), 400
 
     conn  = get_db()
-    sync_csv_to_sqlite(conn)
     trade = conn.execute("SELECT * FROM trades WHERE id=?", (trade_id,)).fetchone()
     if not trade:
+        conn.close()
         return jsonify({"error": "Not found"}), 404
 
     pnl    = calc_pnl(trade["direction"], trade["entry"], exit_price, trade["qty"])
@@ -165,7 +196,6 @@ def update_trade(trade_id):
 @app.route("/api/trades/<int:trade_id>", methods=["DELETE"])
 def delete_trade(trade_id):
     conn = get_db()
-    sync_csv_to_sqlite(conn)
     conn.execute("DELETE FROM trades WHERE id=?", (trade_id,))
     conn.commit()
     sync_sqlite_to_csv(conn)
@@ -176,8 +206,9 @@ def delete_trade(trade_id):
 @app.route("/api/stats", methods=["GET"])
 def get_stats():
     conn   = get_db()
-    sync_csv_to_sqlite(conn)
-    trades = conn.execute("SELECT * FROM trades WHERE result != 'OPEN'").fetchall()
+    trades = conn.execute(
+        "SELECT * FROM trades WHERE result != 'OPEN' ORDER BY date, created_at, id"
+    ).fetchall()
     conn.close()
 
     if not trades:
@@ -192,7 +223,9 @@ def get_stats():
 
     avg_win  = sum(t["pnl"] for t in wins)  / len(wins)  if wins   else 0
     avg_loss = sum(t["pnl"] for t in losses)/ len(losses) if losses else 0
-    profit_factor = abs(avg_win / avg_loss) if avg_loss != 0 else None
+    gross_profit = sum(t["pnl"] for t in wins)
+    gross_loss = abs(sum(t["pnl"] for t in losses))
+    profit_factor = gross_profit / gross_loss if gross_loss else None
 
     # Streak
     streak = 0
@@ -241,7 +274,6 @@ def get_stats():
 @app.route("/api/export", methods=["GET"])
 def export_csv():
     conn   = get_db()
-    sync_csv_to_sqlite(conn)
     sync_sqlite_to_csv(conn)
     trades = conn.execute("SELECT * FROM trades ORDER BY date").fetchall()
     conn.close()
@@ -258,7 +290,6 @@ def export_csv():
 def ai_analysis_prompt():
     """Generate a prompt you can paste into Claude to analyze your trading."""
     conn   = get_db()
-    sync_csv_to_sqlite(conn)
     trades = conn.execute(
         "SELECT * FROM trades WHERE result != 'OPEN' ORDER BY date DESC LIMIT 30"
     ).fetchall()
@@ -305,7 +336,16 @@ def index():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--import-csv", action="store_true")
+    args = parser.parse_args()
     init_db()
+    if args.import_csv:
+        connection = get_db()
+        count = import_csv_to_sqlite(connection)
+        connection.close()
+        print(f"Imported {count} trade(s) from {CSV_PATH}.")
+        raise SystemExit(0)
     print("\n📓 Trade Journal running at http://localhost:5000")
     print("   Press Ctrl+C to stop.\n")
-    app.run(debug=False, port=5000)
+    app.run(debug=False, host="127.0.0.1", port=5000)

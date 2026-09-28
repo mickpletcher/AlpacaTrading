@@ -22,7 +22,7 @@ It includes a browser based journal, CSV exports, logs, and an HTML summary repo
 
 1. Complete the root setup in [README.md](../README.md).
 2. Run `python .\Journal\journal_server.py`.
-3. Add one manual sample trade and inspect CSV and SQLite outputs.
+3. Add one manual sample trade and inspect the SQLite data and CSV export.
 
 ### Tutorial 2: Backtest To Report
 
@@ -77,9 +77,7 @@ In this repo, the browser journal app stores trades in `trades.db`.
 
 CSV means comma separated values. It is a plain text table file that opens easily in Excel and other tools.
 
-In this repo, several strategy scripts write trade rows to `trades.csv`.
-
-The journal service now syncs those CSV rows into SQLite automatically when the app loads data, exports data, or builds stats.
+In this repo, several strategy scripts write trade rows to `trades.csv`. SQLite is authoritative for the browser journal. CSV data is imported only through the explicit import command.
 
 ### What report generation means here
 
@@ -93,7 +91,7 @@ The journal service now syncs those CSV rows into SQLite automatically when the 
 
 ## Setup Steps
 
-1. Decide whether you want the browser journal, the CSV report flow, or both.
+1. Decide whether you want the SQLite browser journal, the separate CSV report flow, or both.
 2. Launch `journal_server.py` from the repo root or from inside `Journal`. The database path is now anchored automatically.
 3. If you want the CSV report flow, make sure `Journal/trades.csv` exists or let `analyze_journal.py` create a starter file.
 
@@ -130,7 +128,7 @@ Expected output:
 - Flask starts listening locally
 - your browser loads the journal page
 - adding a trade returns a success response and updates the visible table
-- browser entries are written to SQLite and mirrored into `trades.csv`
+- browser entries are written to SQLite and the current database is exported to `trades.csv`
 
 ### Example 2: Generate an HTML report from CSV data
 
@@ -176,17 +174,18 @@ It also exposes routes for:
 - exporting CSV
 - generating a prompt for external AI review
 
-## How Sync Works Now
+## SQLite and CSV flow
 
 The journal uses both storage formats, but they no longer drift as easily.
 
 Current behavior:
 
-1. the browser app writes trades into `trades.db`
-2. after browser adds, edits, or deletes, the app rewrites `trades.csv`
-3. when strategy scripts append rows to `trades.csv`, the browser app imports those rows into SQLite the next time it loads trades, stats, exports, or AI prompt data
+1. The browser app writes trades into `trades.db`.
+2. After browser adds, edits, or deletes, the app rewrites `trades.csv` as an export.
+3. Strategy CSV rows do not enter SQLite automatically.
+4. Stop the server and run `python .\Journal\journal_server.py --import-csv` to import CSV rows explicitly and idempotently.
 
-This means the web app, CSV report, and strategy outputs now stay aligned during normal use.
+This avoids two active data authorities and prevents an exported database row from being imported as a duplicate.
 
 ## AI Prompt Workflow
 
@@ -204,7 +203,7 @@ Typical flow:
 
 ## Common Mistakes
 
-- assuming the app never refreshes imported strategy rows
+- assuming strategy CSV rows are imported automatically
 - expecting the AI prompt feature to call Anthropic directly
 - treating journal stats as enough evidence to trade live
 
@@ -212,9 +211,9 @@ Typical flow:
 
 | Problem | Likely Cause | Fix |
 | --- | --- | --- |
-| browser journal starts but no file appears in `Journal/` | the app has not written any data yet | add a trade or open the export route to force a sync |
+| browser journal starts but no file appears in `Journal/` | the app has not written any data yet | add a trade or open the export route |
 | `report.html` looks stale | `analyze_journal.py` was not rerun | rerun the analysis script after updating `trades.csv` |
-| strategy trade appears in CSV but not in the app yet | the app has not refreshed since the CSV update | reload the page or reopen the stats view |
+| strategy trade appears in CSV but not in the app | CSV imports are explicit | stop the server and run `python .\Journal\journal_server.py --import-csv` |
 | no stats appear in the app | all trades are still open or there are no closed trades | close a trade or add completed sample data |
 
 ## When to Use This Module
@@ -234,7 +233,7 @@ Do not use it when:
 ## TODO and Known Gaps
 
 1. CSV import uses the compact strategy schema, while the browser app supports richer fields such as emotion, lesson, and stop loss.
-2. Strategy scripts still write CSV rows directly. The app sync layer handles those rows on the journal side.
+2. Strategy scripts still write CSV rows directly. Import those rows explicitly when they should enter the browser journal.
 3. `ANTHROPIC_API_KEY` is optional and is not used by `journal_server.py` today.
 
 <!-- markdownlint-enable MD013 -->

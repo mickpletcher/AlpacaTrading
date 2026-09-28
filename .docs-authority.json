@@ -1,0 +1,33 @@
+{
+  "standardVersion": "2.2",
+  "tier": "2",
+  "sourcePaths": [
+    "src",
+    "Alpaca",
+    "Backtesting",
+    "Journal",
+    "Scheduler",
+    "rsi_macd_bot",
+    "btc-signal-executor"
+  ],
+  "maxDriftDays": 30,
+  "responsibilities": {
+    "Project overview": { "authority": "README.md", "class": "living" },
+    "Current assessment": { "authority": "docs/repo-audit.md", "class": "living" },
+    "Architecture": { "authority": "ARCHITECTURE.md", "class": "living" },
+    "Change history": { "authority": "CHANGELOG.md", "class": "living" },
+    "Defect tracking": { "authority": "ISSUES.md", "class": "living" },
+    "Technical debt": { "authority": "TECH-DEBT.md", "class": "living" },
+    "Deferred improvements": { "authority": "FUTURE-UPGRADES.md", "class": "living" },
+    "Validation": { "authority": "Tests/README.md", "class": "living" },
+    "Operations": { "authority": "OPERATIONS.md", "class": "living" },
+    "Requirement traceability": { "authority": "Not required at this tier", "class": "living" },
+    "Agreed scope": { "authority": "Not required at this tier", "class": "contractual" },
+    "Agreed design": { "authority": "Not required at this tier", "class": "contractual" },
+    "Scope amendments": { "authority": "Not required at this tier", "class": "contractual" },
+    "Decision history": { "authority": "docs/decisions/README.md", "class": "derived" },
+    "Resolved history": { "authority": "upgrades/README.md", "class": "derived" },
+    "Development rules": { "authority": "PROJECT-STANDARD.md", "class": "governance" },
+    "Agent rules": { "authority": "AGENTS.md", "class": "governance" }
+  }
+}

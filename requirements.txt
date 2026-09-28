@@ -8,7 +8,7 @@ alpaca-py==0.43.2
 pandas==3.0.2
 
 # Numerical array support used by strategy calculations and synthetic tests.
-numpy==2.4.4
+numpy==2.2.6
 
 # Direct HTTP client used by connectivity tests and circuit breaker checks.
 requests==2.33.1

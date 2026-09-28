@@ -29,3 +29,14 @@ Trading.code-workspace
 backtest_results.html
 testResults.xml
 upgrades/future-upgrades.md
+
+# Runtime trading and journal state
+Journal/*.db
+Journal/trades.csv
+Journal/*_log.txt
+Journal/report.html
+Journal/*_state.json
+Journal/*.lock
+btc-signal-executor/executor.log
+btc-signal-executor/runtime/
+rsi_macd_bot/trades.log

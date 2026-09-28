@@ -36,10 +36,9 @@ if str(ALPACA_DIR) not in sys.path:
 
 from bollinger_rsi import BollingerRSI
 from circuit_breaker import is_safe_to_trade
+from trading_safety import PaperTradingClient, require_paper_mode
 
-PAPER_TRADING = True
-PAPER_URL = "https://paper-api.alpaca.markets"
-LIVE_URL = "https://api.alpaca.markets"
+PAPER_URL = require_paper_mode()
 
 JOURNAL_CSV = REPO_ROOT / "Journal" / "trades.csv"
 LIVE_LOG = REPO_ROOT / "Journal" / "live_bollinger_rsi_log.txt"
@@ -156,13 +155,10 @@ def main() -> int:
 
     try:
         api_key, secret_key = load_credentials()
-        trading_client = TradingClient(api_key=api_key, secret_key=secret_key, paper=PAPER_TRADING)
+        trading_client = PaperTradingClient(api_key=api_key, secret_key=secret_key)
         data_client = StockHistoricalDataClient(api_key=api_key, secret_key=secret_key)
 
-        base_url = PAPER_URL if PAPER_TRADING else LIVE_URL
-        print(f"Running Bollinger+RSI for {symbol} using base URL {base_url}")
-        if not PAPER_TRADING:
-            print("WARNING: PAPER_TRADING is False. Live order routing is enabled.")
+        print(f"Running Bollinger+RSI for {symbol} using base URL {PAPER_URL}")
 
         bars = fetch_recent_daily_bars(data_client, symbol)
         if len(bars) < 60:

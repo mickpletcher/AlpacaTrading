@@ -144,7 +144,9 @@ function Invoke-AlpacaRequest {
 
         [object]$Body,
 
-        [switch]$AllowNotFound
+        [switch]$AllowNotFound,
+
+        [scriptblock]$RequestInvoker
     )
 
     $cfg     = Get-AlpacaConfig
@@ -188,7 +190,11 @@ function Invoke-AlpacaRequest {
             $respHeaders = $null
             $irmParams['ResponseHeadersVariable'] = 'respHeaders'
 
-            $response = Invoke-RestMethod @irmParams
+            $response = if ($RequestInvoker) {
+                & $RequestInvoker $irmParams
+            } else {
+                Invoke-RestMethod @irmParams
+            }
 
             if ($respHeaders -and $respHeaders['X-Request-ID']) {
                 Write-Verbose "X-Request-ID: $($respHeaders['X-Request-ID'])"

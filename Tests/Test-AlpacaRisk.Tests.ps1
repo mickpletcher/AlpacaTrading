@@ -119,6 +119,7 @@ Describe 'Kill Switch' {
     }
 
     BeforeEach {
+        Initialize-AlpacaRisk -StateDirectory $TestDrive | Out-Null
         Reset-AlpacaKillSwitch -Confirm:$false
     }
 
@@ -150,9 +151,9 @@ Describe 'Test-AlpacaOrderRisk' {
     }
 
     BeforeEach {
-        Initialize-AlpacaRisk -MaxPositionValue 1000 -MaxShares 10 -MaxDailyLoss 200 | Out-Null
+        Initialize-AlpacaRisk -MaxPositionValue 1000 -MaxShares 10 -MaxDailyLoss 200 -StateDirectory $TestDrive | Out-Null
         Reset-AlpacaKillSwitch -Confirm:$false
-        $riskStatePath = Join-Path $global:TradingTestRepoRoot 'Journal\alpaca_risk_state.json'
+        $riskStatePath = Join-Path $TestDrive 'alpaca_risk_state.json'
         @'
 {
   "daily_loss_date": "",
@@ -198,7 +199,8 @@ Describe 'Daily Loss Tracking' {
     }
 
     BeforeEach {
-        $riskStatePath = Join-Path $global:TradingTestRepoRoot 'Journal\alpaca_risk_state.json'
+        Initialize-AlpacaRisk -StateDirectory $TestDrive | Out-Null
+        $riskStatePath = Join-Path $TestDrive 'alpaca_risk_state.json'
         @'
 {
   "daily_loss_date": "",

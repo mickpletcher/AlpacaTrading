@@ -23,6 +23,7 @@ import requests
 from dotenv import load_dotenv
 
 from circuit_breaker import is_safe_to_trade
+from trading_safety import require_paper_mode
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 ENV_PATH = ROOT_DIR / ".env"
@@ -30,7 +31,7 @@ load_dotenv(ENV_PATH)
 
 ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "").strip()
 ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "").strip()
-TRADING_BASE_URL = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets").strip().rstrip("/")
+TRADING_BASE_URL = require_paper_mode()
 DATA_BASE_URL = "https://data.alpaca.markets"
 
 BOT_TICKER = os.getenv("ALPACA_BOT_TICKER", "SPY").strip().upper()
@@ -62,6 +63,8 @@ def api_request(
     use_data_api: bool = False,
     allow_not_found: bool = False,
 ) -> dict[str, object] | list[dict[str, object]]:
+    if not use_data_api and method.upper() != "GET":
+        require_paper_mode(TRADING_BASE_URL)
     base_url = DATA_BASE_URL if use_data_api else TRADING_BASE_URL
     response = requests.request(
         method=method,

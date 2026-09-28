@@ -48,54 +48,55 @@ Describe 'Invoke-AlpacaRequest' {
     }
 
     It 'Throws on a non-retryable 400 without retrying' {
-        Mock Invoke-RestMethod {
-            $response = [System.Net.HttpWebResponse]::new.Invoke(@())
+        $script:requestCount = 0
+        $invoker = {
+            param($Parameters)
+            $script:requestCount++
             $ex = [System.Net.WebException]::new('Bad Request')
-            $err = [System.Management.Automation.ErrorRecord]::new(
-                $ex, 'WebCmdletWebResponseException', [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
-            )
-            throw $err
-        } -ModuleName 'Alpaca.Auth'
+            Add-Member -InputObject $ex -NotePropertyName Response -NotePropertyValue ([PSCustomObject]@{ StatusCode = 400 }) -Force
+            throw $ex
+        }
 
         $cfg = Get-AlpacaConfig
-        { Invoke-AlpacaRequest -Method GET -BaseUrl $cfg.TradingBaseUrl -Path '/v2/nonexistent' } | Should -Throw
+        { Invoke-AlpacaRequest -Method GET -BaseUrl $cfg.TradingBaseUrl -Path '/v2/nonexistent' -RequestInvoker $invoker } | Should -Throw
+        $script:requestCount | Should -Be 1
     }
 
     It 'Returns null when AllowNotFound is set and server returns 404' {
-        Mock Invoke-RestMethod {
+        $invoker = {
+            param($Parameters)
             $webEx = New-Object System.Net.WebException 'Not Found'
-            $mockResponse = [PSCustomObject]@{ StatusCode = [System.Net.HttpStatusCode]::NotFound }
-            Add-Member -InputObject $webEx -NotePropertyName Response -NotePropertyValue $mockResponse -Force
+            Add-Member -InputObject $webEx -NotePropertyName Response -NotePropertyValue ([PSCustomObject]@{ StatusCode = 404 }) -Force
             throw $webEx
-        } -ModuleName 'Alpaca.Auth'
+        }
 
         $cfg = Get-AlpacaConfig
-        $result = Invoke-AlpacaRequest -Method GET -BaseUrl $cfg.TradingBaseUrl -Path '/v2/positions/FAKESYMBOL' -AllowNotFound
+        $result = Invoke-AlpacaRequest -Method GET -BaseUrl $cfg.TradingBaseUrl -Path '/v2/positions/FAKESYMBOL' -AllowNotFound -RequestInvoker $invoker
         $result | Should -BeNullOrEmpty
     }
 
     It 'Builds correct URI from BaseUrl and Path' {
         $script:captured = $null
-        Mock Invoke-RestMethod {
-            param($Method, $Uri, $Headers, $TimeoutSec, $ErrorAction)
-            $script:captured = $Uri
+        $invoker = {
+            param($Parameters)
+            $script:captured = $Parameters.Uri
             return @{ test = 'value' }
-        } -ModuleName 'Alpaca.Auth'
+        }
 
-        Invoke-AlpacaRequest -Method GET -BaseUrl 'https://paper-api.alpaca.markets' -Path '/v2/account' | Out-Null
+        Invoke-AlpacaRequest -Method GET -BaseUrl 'https://paper-api.alpaca.markets' -Path '/v2/account' -RequestInvoker $invoker | Out-Null
         $script:captured | Should -BeLike '*paper-api.alpaca.markets/v2/account*'
     }
 
     It 'Appends query params to the URI correctly' {
         $script:capturedUri = $null
-        Mock Invoke-RestMethod {
-            param($Method, $Uri)
-            $script:capturedUri = $Uri
+        $invoker = {
+            param($Parameters)
+            $script:capturedUri = $Parameters.Uri
             return @{}
-        } -ModuleName 'Alpaca.Auth'
+        }
 
         $cfg = Get-AlpacaConfig
-        Invoke-AlpacaRequest -Method GET -BaseUrl $cfg.TradingBaseUrl -Path '/v2/orders' -QueryParams @{ status = 'open'; limit = '10' } | Out-Null
+        Invoke-AlpacaRequest -Method GET -BaseUrl $cfg.TradingBaseUrl -Path '/v2/orders' -QueryParams @{ status = 'open'; limit = '10' } -RequestInvoker $invoker | Out-Null
         $script:capturedUri | Should -Match 'status=open'
         $script:capturedUri | Should -Match 'limit=10'
     }

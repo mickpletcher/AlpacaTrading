@@ -7,7 +7,6 @@ from typing import Optional
 
 import schedule
 from alpaca.data.historical import StockHistoricalDataClient
-from alpaca.trading.client import TradingClient
 from dotenv import load_dotenv
 
 from config import get_config
@@ -24,6 +23,7 @@ from order_manager import (
     place_stop_loss,
     wait_for_fill_price,
 )
+from trading_safety import PaperTradingClient
 
 load_dotenv()
 
@@ -39,7 +39,7 @@ class BotRuntime:
         if not api_key or not secret_key:
             raise RuntimeError("Missing ALPACA_API_KEY or ALPACA_SECRET_KEY in .env")
 
-        self.trading_client = TradingClient(api_key=api_key, secret_key=secret_key, paper=self.config.paper)
+        self.trading_client = PaperTradingClient(api_key=api_key, secret_key=secret_key)
         self.data_client = StockHistoricalDataClient(api_key=api_key, secret_key=secret_key)
 
     def _market_is_open(self) -> bool:

@@ -1,12 +1,19 @@
 from __future__ import annotations
 
 import logging
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 from alpaca.common.exceptions import APIError
-from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, TimeInForce
 from alpaca.trading.requests import MarketOrderRequest
+
+ALPACA_DIR = Path(__file__).resolve().parent.parent / "Alpaca"
+if str(ALPACA_DIR) not in sys.path:
+    sys.path.insert(0, str(ALPACA_DIR))
+
+from trading_safety import PaperTradingClient
 
 
 @dataclass(frozen=True)
@@ -24,19 +31,25 @@ def normalize_symbol(raw_ticker: str) -> str:
 
 
 class AlpacaExecutor:
-    def __init__(self, api_key: str, secret_key: str, paper: bool, logger: logging.Logger) -> None:
+    def __init__(self, api_key: str, secret_key: str, max_daily_loss: float, logger: logging.Logger) -> None:
         self.logger = logger
-        self.trading_client = TradingClient(api_key=api_key, secret_key=secret_key, paper=paper)
+        self.max_daily_loss = max_daily_loss
+        self.trading_client = PaperTradingClient(api_key=api_key, secret_key=secret_key)
 
-    def execute_signal(self, action: str, ticker: str, quantity: float) -> ExecutionResult:
+    def execute_signal(self, action: str, ticker: str, quantity: float, signal_id: str) -> ExecutionResult:
         symbol = normalize_symbol(ticker)
         normalized_action = action.strip().lower()
 
         try:
             if normalized_action == "buy":
-                return self._buy(symbol, quantity)
+                daily_loss = self._daily_loss()
+                if daily_loss >= self.max_daily_loss:
+                    message = f"Daily loss limit reached ({daily_loss:.2f}). Signal skipped."
+                    self.logger.error(message)
+                    return ExecutionResult(success=False, message=message)
+                return self._submit(symbol, quantity, OrderSide.BUY, signal_id)
             if normalized_action == "sell":
-                return self._sell(symbol, quantity)
+                return self._submit(symbol, quantity, OrderSide.SELL, signal_id)
             if normalized_action == "close":
                 return self._close(symbol)
 
@@ -52,40 +65,26 @@ class AlpacaExecutor:
             self.logger.error(error_text)
             return ExecutionResult(success=False, message=error_text)
 
-    def _buy(self, symbol: str, quantity: float) -> ExecutionResult:
+    def _daily_loss(self) -> float:
+        account = self.trading_client.get_account()
+        equity = float(account.equity)
+        last_equity = float(account.last_equity)
+        return max(0.0, last_equity - equity)
+
+    def _submit(self, symbol: str, quantity: float, side: OrderSide, signal_id: str) -> ExecutionResult:
         order = self.trading_client.submit_order(
             MarketOrderRequest(
                 symbol=symbol,
                 qty=quantity,
-                side=OrderSide.BUY,
-                time_in_force=TimeInForce.DAY,
+                side=side,
+                time_in_force=TimeInForce.GTC,
+                client_order_id=signal_id,
             )
         )
         order_id = str(order.id)
-        self.logger.info("ORDER_SUBMITTED | symbol=%s action=buy qty=%.8f order_id=%s status=%s", symbol, quantity, order_id, getattr(order, "status", "unknown"))
-        return ExecutionResult(success=True, message="buy submitted", order_id=order_id)
-
-    def _sell(self, symbol: str, quantity: float) -> ExecutionResult:
-        account = self.trading_client.get_account()
-        shorting_enabled = bool(getattr(account, "shorting_enabled", False))
-
-        if shorting_enabled:
-            order = self.trading_client.submit_order(
-                MarketOrderRequest(
-                    symbol=symbol,
-                    qty=quantity,
-                    side=OrderSide.SELL,
-                    time_in_force=TimeInForce.DAY,
-                )
-            )
-            order_id = str(order.id)
-            self.logger.info("ORDER_SUBMITTED | symbol=%s action=sell qty=%.8f order_id=%s status=%s", symbol, quantity, order_id, getattr(order, "status", "unknown"))
-            return ExecutionResult(success=True, message="sell submitted", order_id=order_id)
-
-        close_order = self.trading_client.close_position(symbol)
-        order_id = str(getattr(close_order, "id", "")) or None
-        self.logger.info("ORDER_SUBMITTED | symbol=%s action=sell_close_long qty=%.8f order_id=%s status=%s", symbol, quantity, order_id or "n/a", getattr(close_order, "status", "unknown"))
-        return ExecutionResult(success=True, message="sell handled by closing long", order_id=order_id)
+        action = "buy" if side == OrderSide.BUY else "sell"
+        self.logger.info("ORDER_SUBMITTED | symbol=%s action=%s qty=%.8f order_id=%s status=%s", symbol, action, quantity, order_id, getattr(order, "status", "unknown"))
+        return ExecutionResult(success=True, message=f"{action} submitted", order_id=order_id)
 
     def _close(self, symbol: str) -> ExecutionResult:
         close_order = self.trading_client.close_position(symbol)

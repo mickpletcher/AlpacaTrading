@@ -17,6 +17,8 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+from trading_safety import require_paper_mode
+
 ROOT_DIR = Path(__file__).resolve().parent.parent
 ENV_PATH = ROOT_DIR / ".env"
 JOURNAL_DIR = ROOT_DIR / "Journal"
@@ -102,7 +104,7 @@ def _get_headers() -> dict[str, str] | None:
 
 
 def _get_base_url() -> str:
-    return os.getenv("ALPACA_BASE_URL", DEFAULT_BASE_URL).strip().rstrip("/")
+    return require_paper_mode(os.getenv("ALPACA_BASE_URL", DEFAULT_BASE_URL))
 
 
 def _read_consecutive_losses_from_journal() -> int:

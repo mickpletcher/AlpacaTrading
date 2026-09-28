@@ -146,20 +146,34 @@ def _csv_row_to_trade_values(row: dict[str, str]) -> tuple[object, ...]:
     )
 
 
-def sync_csv_to_sqlite(conn: sqlite3.Connection) -> None:
+def import_csv_to_sqlite(conn: sqlite3.Connection) -> int:
     ensure_csv_file()
     ensure_trade_table(conn)
+    imported = 0
 
     with CSV_PATH.open("r", encoding="utf-8", newline="") as csv_file:
         reader = csv.DictReader(csv_file)
         if not reader.fieldnames:
-            return
+            return imported
 
         for raw_row in reader:
             row = normalize_csv_row(raw_row)
             if not row["date"] or not row["symbol"]:
                 continue
-            conn.execute(
+            values = _csv_row_to_trade_values(row)
+            duplicate = conn.execute(
+                """
+                SELECT 1 FROM trades
+                WHERE date=? AND ticker=? AND direction=? AND entry=?
+                  AND COALESCE(exit, 0)=COALESCE(?, 0) AND qty=?
+                  AND COALESCE(pnl, 0)=COALESCE(?, 0) AND COALESCE(notes, '')=?
+                LIMIT 1
+                """,
+                (values[0], values[1], values[2], values[3], values[4], values[5], values[8], values[15]),
+            ).fetchone()
+            if duplicate:
+                continue
+            cursor = conn.execute(
                 """
                 INSERT OR IGNORE INTO trades (
                     date, ticker, direction, entry, exit, qty, stop_loss, target,
@@ -167,10 +181,12 @@ def sync_csv_to_sqlite(conn: sqlite3.Connection) -> None:
                     screenshot, source, sync_key
                 ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
-                _csv_row_to_trade_values(row),
+                values,
             )
+            imported += cursor.rowcount
 
     conn.commit()
+    return imported
 
 
 def sync_sqlite_to_csv(conn: sqlite3.Connection) -> None:

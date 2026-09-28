@@ -68,15 +68,19 @@ $script:DuplicateWindowMinutes = 5
 #region  State file helpers
 
 function _Get-RiskStateFile {
-    $cfg  = Get-AlpacaConfig
-    $dir  = Join-Path $cfg.RepoRoot 'Journal'
+    $dir = if ($null -ne $script:RiskConfig -and $script:RiskConfig.StateDirectory) {
+        $script:RiskConfig.StateDirectory
+    } else {
+        $cfg = Get-AlpacaConfig
+        Join-Path $cfg.RepoRoot 'Journal'
+    }
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
     return Join-Path $dir 'alpaca_risk_state.json'
 }
 
 function _Get-KillSwitchFile {
-    $cfg = Get-AlpacaConfig
-    return Join-Path $cfg.RepoRoot 'Journal\alpaca_kill_switch.lock'
+    $stateFile = _Get-RiskStateFile
+    return Join-Path (Split-Path $stateFile -Parent) 'alpaca_kill_switch.lock'
 }
 
 function _Load-RiskState {
@@ -162,14 +166,24 @@ function Initialize-AlpacaRisk {
         [double]$MaxDailyLoss = 1000,
 
         [ValidateRange(1, 1440)]
-        [int]$DuplicateWindowMinutes = 5
+        [int]$DuplicateWindowMinutes = 5,
+
+        [string]$StateDirectory
     )
+
+    if ($StateDirectory) {
+        $StateDirectory = [IO.Path]::GetFullPath($StateDirectory)
+        if (-not (Test-Path -LiteralPath $StateDirectory)) {
+            New-Item -ItemType Directory -Path $StateDirectory -Force | Out-Null
+        }
+    }
 
     $script:RiskConfig = [PSCustomObject]@{
         MaxPositionValue       = $MaxPositionValue
         MaxShares              = $MaxShares
         MaxDailyLoss           = $MaxDailyLoss
         DuplicateWindowMinutes = $DuplicateWindowMinutes
+        StateDirectory         = $StateDirectory
     }
 
     $script:DuplicateWindowMinutes = $DuplicateWindowMinutes

@@ -7,6 +7,16 @@ Mixed Python and PowerShell trading tooling for Alpaca paper trading, strategy b
 > [!WARNING]
 > This repository is for education and paper-trading workflow development. It is not financial advice, and it should not be treated as production live-trading software without additional controls.
 
+## Current Status
+
+- Status: Active, paper-trading and research use only
+- Execution boundary: Python and PowerShell order paths fail closed to Alpaca paper trading
+- Documentation standard: 2.2
+- Project tier: 2
+- Primary technologies: Python, PowerShell, Flask, FastAPI, SQLite
+
+For current repository health, risks, and priorities, see the [Current Assessment](docs/repo-audit.md).
+
 ## What The Project Does Today
 
 This repository already supports six main workflows:
@@ -20,9 +30,17 @@ This repository already supports six main workflows:
 
 The repo also includes a modular PowerShell Alpaca client under `src/`, example PowerShell scripts under `examples/`, Python strategy tests, and PowerShell module tests under `Tests/`.
 
-## Repo Guides
+## Documentation
 
-- [Repository Audit](docs/repo-audit.md)
+- [Authority Map And Development Rules](PROJECT-STANDARD.md)
+- [Current Assessment](docs/repo-audit.md)
+- [Architecture](ARCHITECTURE.md)
+- [Validation](Tests/README.md)
+- [Operations](OPERATIONS.md)
+- [Defects](ISSUES.md)
+- [Technical Debt](TECH-DEBT.md)
+- [Future Upgrades](FUTURE-UPGRADES.md)
+- [Change History](CHANGELOG.md)
 - [Applied Upgrades](upgrades/README.md)
 - [Core Trading Foundation Spec](specs/001-core-trading-foundation/spec.md)
 - [Backtesting Guide](Backtesting/README.md)
@@ -31,7 +49,6 @@ The repo also includes a modular PowerShell Alpaca client under `src/`, example 
 - [Learning Roadmap](Learning%20Roadmap/README.md)
 - [RSI Plus MACD Bot Guide](rsi_macd_bot/README.md)
 - [BTC Signal Executor Guide](btc-signal-executor/README.md)
-- [Tests Guide](Tests/README.md)
 
 ## Recommended Tutorials
 
@@ -53,35 +70,11 @@ The repo also includes a modular PowerShell Alpaca client under `src/`, example 
 
 1. Read [RSI Plus MACD Bot Guide](rsi_macd_bot/README.md) for a scheduled bot loop.
 2. Read [BTC Signal Executor Guide](btc-signal-executor/README.md) for webhook-based execution.
-3. Review [Applied Upgrades](upgrades/README.md) and the active [spec](specs/001-core-trading-foundation/spec.md) before structural repo changes.
+3. Review the [Project Standard](PROJECT-STANDARD.md), [Applied Upgrades](upgrades/README.md), and relevant numbered spec before structural repo changes.
 
 ## Current Architecture
 
-| Area | Current Role | Main Entry Points |
-| --- | --- | --- |
-| `src/` | Reusable PowerShell Alpaca modules for config, auth, market data, trading, streams, and risk | `src/Alpaca.*/*.psm1` |
-| `Alpaca/` | Python and PowerShell paper-trading scripts and safety helpers | `Alpaca/paper_trade.py`, `Alpaca/alpaca_paper.py`, `Alpaca/alpaca_paper.ps1` |
-| `Backtesting/` | Strategy backtests plus live-paper runners | `Backtesting/backtest.py`, `Backtesting/strategies/*.py` |
-| `Journal/` | Flask journal app, SQLite and CSV storage, report generation | `Journal/journal_server.py`, `Journal/analyze_journal.py` |
-| `Scheduler/` | OS-friendly launchers for scheduled runs | `Scheduler/run_strategy.ps1`, `Scheduler/run_strategy.sh` |
-| `rsi_macd_bot/` | Self-contained Alpaca paper bot with logging and risk config | `rsi_macd_bot/bot.py` |
-| `btc-signal-executor/` | FastAPI webhook executor for TradingView-style BTC signals | `btc-signal-executor/main.py` |
-| `Tests/` | Python `pytest` suite plus PowerShell Pester coverage | `Tests/test_*.py`, `Tests/*.Tests.ps1` |
-
-High-level operating flow:
-
-```mermaid
-flowchart TD
-    A[".env and module config"] --> B["Connectivity and safety checks"]
-    B --> C["Backtesting workflows"]
-    B --> D["Paper trading scripts and bots"]
-    C --> E["Journal CSV and reports"]
-    D --> E
-    D --> F["PowerShell risk state and circuit logs"]
-    G["Journal web app"] --> H["SQLite trade journal"]
-    E --> I["Report generation and review"]
-    J["Scheduler entry points"] --> D
-```
+The repository is a collection of independently executable trading tools rather than one deployable application. See [ARCHITECTURE.md](ARCHITECTURE.md) for evidence, data flow, integrations, storage, and safety boundaries.
 
 ## Setup
 
@@ -150,20 +143,16 @@ Future repository work should follow the retrofit GitHub Spec process now includ
 6. Run an audit against the completed change
 7. Run regression checks before merge
 
-For the existing repo baseline:
-
-- Python verification is currently stable in `.venv` with `pytest`
-- PowerShell module smoke checks are stable
-- PowerShell Pester coverage exists, but the suite currently spans mixed Pester-era syntax and should be modernized in a dedicated follow-up before being made a strict CI gate
+Validation procedures and current limitations are maintained in [Tests/README.md](Tests/README.md). Current executed results are maintained in the [Current Assessment](docs/repo-audit.md).
 
 ## GitHub Spec Workflow
 
 This repository now includes:
 
-- `.github/copilot-instructions.md` for repo-specific implementation guidance
+- `AGENTS.md` for authoritative repo-specific implementation guidance
 - `.github/prompts/` for reusable requirements, spec, plan, task, audit, regression, and release prompts
 - `specs/001-core-trading-foundation/` as the baseline spec retrofit for the current repository state
-- `docs/repo-audit.md` as the current repository audit snapshot
+- `docs/repo-audit.md` as the current repository assessment
 - `upgrades/README.md` as the applied-upgrades log for repo-level improvements
 
 When adding a new feature, create the next numbered folder under `specs/` and keep the change grounded in the current architecture rather than reimagining the project.
@@ -178,9 +167,11 @@ Trading/
 |   `-- workflows/
 |-- docs/
 |   |-- repo-audit.md
+|   |-- decisions/
 |   `-- screenshots/
 |-- specs/
-|   `-- 001-core-trading-foundation/
+|   |-- 001-core-trading-foundation/
+|   `-- 002-living-documentation-standard/
 |-- src/
 |-- Alpaca/
 |-- Backtesting/
@@ -190,6 +181,10 @@ Trading/
 |-- btc-signal-executor/
 |-- examples/
 |-- Tests/
+|-- AGENTS.md
+|-- ARCHITECTURE.md
+|-- OPERATIONS.md
+|-- PROJECT-STANDARD.md
 |-- .env.example
 |-- .gitignore
 |-- pytest.ini
@@ -197,22 +192,8 @@ Trading/
 `-- requirements.txt
 ```
 
-## Current Quality Notes
+## Known Limitations
 
-- The repo has strong functional coverage across Python workflows and good module decomposition in `src/`.
-- The top-level structure is broader than a typical single-application repo, so new work should clearly state which module it affects.
-- `Tests/` is capitalized and contains both Python and PowerShell tests. `pytest.ini` now codifies that path to avoid tool drift.
-- Existing generated artifacts such as `Journal/report.html` and `Journal/trades.db` remain preserved in this retrofit. They were not deleted or rewritten.
-
-## Baseline Verification
-
-Verified during this retrofit:
-
-- `python -m compileall Alpaca Backtesting Journal rsi_macd_bot btc-signal-executor`
-- `.\.venv\Scripts\python.exe -m pytest .\Tests -q`
-
-Observed but not changed in this pass:
-
-- PowerShell Pester tests are present, but the local environment exposed both legacy Pester compatibility issues and some failing assertions. That test migration is captured as follow-up work in the spec documents rather than folded into this scaffold retrofit.
+See [ISSUES.md](ISSUES.md) for active defects and [TECH-DEBT.md](TECH-DEBT.md) for accepted implementation risks. The BTC webhook is paper-only and requires the limits, replay database, passphrase, and ingress controls documented in its component guide.
 
 <!-- markdownlint-enable MD013 -->

@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD013 -->
+<!-- markdownlint-disable MD013 MD024 -->
 
 # Applied Upgrades
 
@@ -47,10 +47,62 @@ Added a dedicated `upgrades/` directory to track completed repo upgrades separat
 - future ideas can be captured without forcing unfinished planning into version control
 - the repository now has a lightweight upgrade log that complements the spec system
 
+## Upgrade 003: Living Documentation Standard 2.2
+
+### Summary
+
+Adopted a repository-local Tier 2 documentation standard using single-valued responsibility authorities and evidence-based assessment.
+
+### What Changed
+
+- declared the authority mapping in `PROJECT-STANDARD.md` and `.docs-authority.json`
+- consolidated repository agent rules under `AGENTS.md`
+- added architecture, operations, defect, debt, future-work, decision, and change-history authorities
+- adapted the existing repository audit and test guide as current assessment and validation authorities
+- added `scripts/docs-check.ps1` for missing-authority and freshness checks
+
+### Outcome
+
+- contributors and agents can resolve one authoritative document per responsibility
+- current defects and debt are separated from future capability ideas
+- material assessment and architecture claims now carry repository evidence
+- documentation compliance is locally checkable without repository administration permissions
+
 ## Notes
 
-- `README.md` in `upgrades/` is for completed or intentionally applied upgrades
-- `future-upgrades.md` is for backlog planning and local prioritization
-- detailed implementation work for future upgrades should still be routed through numbered spec folders under `specs/`
+- `README.md` in `upgrades/` is the resolved history authority
+- `FUTURE-UPGRADES.md` is the repository authority for deferred improvements
+- detailed implementation work remains routed through numbered spec folders under `specs/`
 
-<!-- markdownlint-enable MD013 -->
+## Upgrade 004: Trading safety remediation
+
+### Summary
+
+Closed the validated order-routing, test-isolation, journal-correctness, runtime-data, dependency, and repository-protection findings from the 2026-09-28 assessment.
+
+### Resolved defects
+
+- BUG-001: BTC market orders now use GTC and carry the inbound signal ID as the Alpaca client order ID.
+- BUG-002: PowerShell risk tests inject Pester temporary storage. The operational risk-state hash remained unchanged during the full suite.
+- BUG-003: Authentication tests inject the HTTP implementation and cannot reach Alpaca.
+- BUG-004: SQLite is authoritative. CSV import is explicit and skips database rows already represented in the export.
+- BUG-005: Profit factor uses gross profit divided by gross loss and streak queries use deterministic order.
+- BUG-006: Webhook actions are strict and validation logs never include the inbound payload or passphrase.
+
+### Resolved debt
+
+- TD-001: Every Python order-routing surface uses the shared fail-closed `PaperTradingClient` or the exact paper REST endpoint assertion.
+- TD-002: Automated tests now cover the webhook, journal, scheduler wrapper, shared paper boundary, execution-surface adoption, and RSI order construction.
+- TD-003: Runtime journal, report, log, database, and risk-state files were removed from Git tracking and ignored without deleting local files.
+- TD-005: NumPy is pinned within numba's supported range, all three requirement sets install together, and CI runs `pip check`.
+- TD-007: Dependabot alerts, automated security fixes, CodeQL default setup, strict required CI checks, conversation resolution, and force-push and deletion protection were enabled on `main`.
+
+### Security boundary
+
+The BTC webhook is paper-only. It enforces a ticker allowlist, finite quantity and notional caps, UTC freshness, persistent replay IDs, constant-time passphrase comparison, request rate limits, a buy-side failure circuit breaker, and a daily-loss limit. Sell and close requests remain available as risk-reducing actions when the buy breaker is open.
+
+### Outcome
+
+The repository remains paper-only. Live Python order routing cannot be enabled through an environment value or source constant. Enabling live execution requires a separate approved Class 4 design.
+
+<!-- markdownlint-enable MD013 MD024 -->
