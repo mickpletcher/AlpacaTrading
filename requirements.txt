@@ -17,7 +17,7 @@ requests==2.33.1
 python-dotenv==1.2.3
 
 # Time zone support used by market time calculations and Alpaca workflows.
-pytz==2026.1.post1
+pytz==2026.4
 
 # Backtrader engine used by the Bollinger plus RSI Backtrader workflow.
 backtrader==1.9.78.123
