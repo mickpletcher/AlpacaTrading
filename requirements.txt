@@ -5,7 +5,7 @@
 alpaca-py==0.43.2
 
 # Core dataframe library used across backtests, indicators, journal summaries, and tests.
-pandas==3.0.2
+pandas==3.0.6
 
 # Numerical array support used by strategy calculations and synthetic tests.
 numpy==2.2.6
