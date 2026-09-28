@@ -1,4 +1,4 @@
-alpaca-py==0.43.2
+alpaca-py==0.44.0
 pandas==3.0.6
 pandas-ta==0.4.71b0
 python-dotenv==1.2.3
