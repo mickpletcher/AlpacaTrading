@@ -23,7 +23,7 @@ pytz==2026.4
 backtrader==1.9.78.123
 
 # backtesting.py engine used by Backtesting/backtest.py.
-backtesting==0.6.5
+backtesting==0.6.6
 
 # Yahoo Finance data client used by Backtesting/backtest.py.
 yfinance==1.2.0
