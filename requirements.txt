@@ -32,4 +32,4 @@ yfinance==1.2.0
 Flask==3.1.3
 
 # Test runner used for strategy logic tests and Alpaca connectivity tests.
-pytest==9.0.2
+pytest==9.0.3
