@@ -1,5 +1,5 @@
 alpaca-py==0.44.0
-pandas==3.0.2
+pandas==3.0.6
 pandas-ta==0.4.71b0
 python-dotenv==1.2.3
 schedule==1.2.2
