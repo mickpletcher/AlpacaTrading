@@ -39,8 +39,8 @@ try {
     }
 
     if ($Publish) {
-        Invoke-CheckedCommand gh auth status
-        Invoke-CheckedCommand git fetch --quiet origin main --tags
+        Invoke-CheckedCommand -FilePath gh -Arguments @('auth', 'status')
+        Invoke-CheckedCommand -FilePath git -Arguments @('fetch', '--quiet', 'origin', 'main', '--tags')
         $localCommit = (git rev-parse HEAD).Trim()
         $remoteCommit = (git rev-parse origin/main).Trim()
         if ($localCommit -ne $remoteCommit) {
@@ -100,12 +100,12 @@ try {
     try {
         Set-Content -LiteralPath $releaseNotes -Value $section.Trim() -Encoding utf8
         if ($PSCmdlet.ShouldProcess($tag, 'Commit, tag, push, and create GitHub release')) {
-            Invoke-CheckedCommand git add -- CHANGELOG.md changelog.d
-            Invoke-CheckedCommand git commit -m "release: $tag"
-            Invoke-CheckedCommand git tag -a $tag -m "AlpacaTrading $tag"
-            Invoke-CheckedCommand git push origin main
-            Invoke-CheckedCommand git push origin $tag
-            Invoke-CheckedCommand gh release create $tag --title "AlpacaTrading $tag" --notes-file $releaseNotes --verify-tag
+            Invoke-CheckedCommand -FilePath git -Arguments @('add', '--', 'CHANGELOG.md', 'changelog.d')
+            Invoke-CheckedCommand -FilePath git -Arguments @('commit', '-m', "release: $tag")
+            Invoke-CheckedCommand -FilePath git -Arguments @('tag', '-a', $tag, '-m', "AlpacaTrading $tag")
+            Invoke-CheckedCommand -FilePath git -Arguments @('push', 'origin', 'main')
+            Invoke-CheckedCommand -FilePath git -Arguments @('push', 'origin', $tag)
+            Invoke-CheckedCommand -FilePath gh -Arguments @('release', 'create', $tag, '--title', "AlpacaTrading $tag", '--notes-file', $releaseNotes, '--verify-tag')
         }
     }
     finally {
