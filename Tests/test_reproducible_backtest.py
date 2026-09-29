@@ -56,6 +56,21 @@ def test_dataset_checksum_mismatch_fails_closed(tmp_path: Path) -> None:
         load_dataset(config_path, config)
 
 
+def test_dataset_checksum_is_stable_across_line_endings(tmp_path: Path) -> None:
+    config = load_configuration(DEFAULT_CONFIG)
+    source = DEFAULT_CONFIG.parent / config["dataset"]["path"]
+    dataset = tmp_path / "sample.csv"
+    dataset.write_bytes(source.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+    config["dataset"]["path"] = "sample.csv"
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+
+    data, _, actual_hash = load_dataset(config_path, config)
+
+    assert len(data) == 320
+    assert actual_hash == config["dataset"]["sha256"]
+
+
 def test_walk_forward_test_windows_do_not_overlap_training_future() -> None:
     report = build_report(DEFAULT_CONFIG)
     folds = report["walk_forward"]["folds"]

@@ -31,9 +31,8 @@ class Metrics:
 
 def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
+    content = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    digest.update(content)
     return digest.hexdigest()
 
 
