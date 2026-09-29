@@ -2,6 +2,10 @@
 
 # AlpacaTrading
 
+[![Quality](https://img.shields.io/github/actions/workflow/status/mickpletcher/AlpacaTrading/ci.yml?branch=main&label=Quality)](https://github.com/mickpletcher/AlpacaTrading/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/mickpletcher/AlpacaTrading?label=Release)](https://github.com/mickpletcher/AlpacaTrading/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 AlpacaTrading is a Windows-first learning toolkit for backtesting trading ideas, recording trades, and sending orders to an Alpaca paper account.
 
 Paper trading uses simulated money. This repository cannot place live-money orders. It is for education and testing, not financial advice.
