@@ -88,7 +88,7 @@ Evidence: `requirements.txt`, `rsi_macd_bot/requirements.txt`, `btc-signal-execu
 - `Tests/` is the current canonical mixed-language test directory.
 - Changes to `main` flow through pull requests with strict required checks and linear squash history. Tags matching `v*` cannot be updated or deleted.
 
-Evidence: `AGENTS.md`, `README.md`, `pytest.ini`.
+Evidence: `AGENTS.md`, `README.md`, `pytest.ini`, `docs/decisions/002-github-repository-hardening.md`, and the live GitHub readback recorded in `docs/repo-audit.md`.
 
 ## Architectural Decisions
 
