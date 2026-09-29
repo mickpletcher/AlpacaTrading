@@ -5,6 +5,7 @@
 # Python virtual environments and caches
 .venv/
 venv/
+.tools/
 __pycache__/
 *.pyc
 *.pyo
@@ -13,6 +14,7 @@ __pycache__/
 .ruff_cache/
 .coverage
 coverage.xml
+powershell-coverage.xml
 
 # Build artifacts
 build/
@@ -40,3 +42,7 @@ Journal/*.lock
 btc-signal-executor/executor.log
 btc-signal-executor/runtime/
 rsi_macd_bot/trades.log
+Backtesting/output/
+Operations/runtime/
+output/playwright/
+.playwright-cli/

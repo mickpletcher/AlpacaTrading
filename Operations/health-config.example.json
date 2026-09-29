@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "stale_files": [
+    {"name": "Scheduler log", "path": "Journal/scheduler_log.txt", "max_age_minutes": 1560, "required": false},
+    {"name": "RSI bot log", "path": "rsi_macd_bot/trades.log", "max_age_minutes": 30, "required": false},
+    {"name": "BTC executor log", "path": "btc-signal-executor/executor.log", "max_age_minutes": 30, "required": false}
+  ],
+  "rejected_order_logs": [
+    "Journal/scheduler_log.txt",
+    "rsi_macd_bot/trades.log",
+    "btc-signal-executor/executor.log"
+  ],
+  "rejected_order_patterns": ["ORDER_REJECT", "ORDER_REJECTED", "API_ERROR", "WEBHOOK_REJECTED", "success=false"],
+  "rejected_order_lookback_minutes": 1440,
+  "scheduler_status_path": "Journal/scheduler_status.json",
+  "scheduler_max_age_minutes": 1560,
+  "circuit_state_path": "Journal/circuit_state.json",
+  "check_paper_account_stops": true
+}

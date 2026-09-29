@@ -2,46 +2,30 @@
 
 # Technical Debt
 
-## TD-004: PowerShell static-analysis warnings are not treated as debt by CI
+Technical debt is known engineering work that is not necessarily a current behavior defect.
+
+## TD-004: PowerShell warnings are not controlled by CI
 
 **Status:** Open
+
 **Severity:** Medium
 **Area:** PowerShell quality
-**Introduced/Discovered:** 2026-09-28
-**Standing waiver:** No
 
-**Related files:** `.github/workflows/ci.yml`, `PSScriptAnalyzerSettings.psd1`
+CI blocks analyzer errors but allows warnings. The current assessment found 171 warnings and 3 informational findings. Most warnings are `Write-Host` style findings, but the set also includes empty catches and suspicious null comparisons.
 
-**Description:** CI blocks only analyzer errors. The assessment found 171 warnings, including empty catch blocks and suspicious null comparisons.
+**Recommended resolution:** Review correctness-related warnings first, create an approved baseline for intentional console output, and make CI reject new unreviewed warnings.
 
-**Impact:** Meaningful warnings can accumulate without review.
-
-**Recommended resolution:** Baseline noisy rules, fix correctness-related warnings, then enforce a reviewed threshold.
-
-**Fix trigger:** Next PowerShell quality pass.
-
-**Estimated effort:** Medium
-
-## TD-006: Strategy evaluation is not reproducible enough for decision making
+## TD-008: GitHub merge and quality gates do not preserve the intended workflow
 
 **Status:** Open
+
 **Severity:** Medium
-**Area:** Backtesting
-**Introduced/Discovered:** 2026-09-28
-**Standing waiver:** No
+**Area:** GitHub repository settings
 
-**Related files:** `Backtesting/`
+GitHub allows merge commits, rebase merges, and squash merges. Automatic source-branch deletion is disabled. Branch protection requires Python and PowerShell checks but not documentation quality or CodeQL. Administrator enforcement is disabled.
 
-**Description:** Strategy runners use different data sources and inconsistent transaction-cost assumptions. Out-of-sample and walk-forward validation are absent.
+**Recommended resolution:** Keep squash merge only, enable branch deletion after merge, require all applicable checks, and decide whether administrator enforcement is appropriate for this repository.
 
-**Impact:** Results are useful for learning but weak evidence for automated trading decisions.
-
-**Recommended resolution:** Implement FU-002.
-
-**Fix trigger:** Before strategy promotion beyond paper experiments.
-
-**Estimated effort:** Large
-
-Resolved TD-001, TD-002, TD-003, TD-005, and TD-007 are recorded under Upgrade 004 in `upgrades/README.md`.
+Resolved TD-001, TD-002, TD-003, TD-005, and TD-007 are recorded under Upgrade 004 in `upgrades/README.md`. Resolved TD-006 and TD-009 are recorded under Upgrade 005.
 
 <!-- markdownlint-enable MD013 MD024 MD060 -->

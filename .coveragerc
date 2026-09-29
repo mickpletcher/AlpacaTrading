@@ -1,0 +1,19 @@
+[run]
+branch = True
+source =
+    Alpaca
+    Backtesting
+    Journal
+    rsi_macd_bot
+    btc-signal-executor
+    Operations
+
+[report]
+exclude_lines =
+    if __name__ == .__main__.:
+    raise SystemExit
+show_missing = True
+skip_covered = True
+
+[xml]
+output = coverage.xml

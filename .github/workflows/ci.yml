@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -25,17 +28,24 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt -r rsi_macd_bot/requirements.txt -r btc-signal-executor/requirements.txt
+          python -m pip install --require-hashes -r requirements.lock.txt
 
       - name: Compile Python packages
         shell: pwsh
         run: |
-          python -m compileall Alpaca Backtesting Journal rsi_macd_bot btc-signal-executor
+          python -m compileall Alpaca Backtesting Journal rsi_macd_bot btc-signal-executor Operations Tests
 
-      - name: Run pytest
+      - name: Run pytest with coverage
         shell: pwsh
         run: |
-          python -m pytest .\Tests -q
+          python -m pytest .\Tests -q --cov --cov-config=.coveragerc --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=50
+
+      - name: Upload Python coverage
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-coverage
+          path: coverage.xml
 
       - name: Validate installed dependencies
         shell: pwsh
@@ -78,28 +88,34 @@ jobs:
       - name: Run script analyzer
         shell: pwsh
         run: |
-          Import-Module PSScriptAnalyzer
-          $files = Get-ChildItem .\src,.\Alpaca,.\Backtesting,.\Scheduler,.\examples -Recurse -Include *.ps1,*.psm1 -File | Select-Object -ExpandProperty FullName
-          if (-not $files) {
-            throw 'No PowerShell files found for analysis.'
-          }
-          $results = @()
-          foreach ($file in $files) {
-            $results += Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1
-          }
-          $blockingResults = $results | Where-Object { $_.Severity -in @('Error', 'ParseError') }
-          if ($blockingResults) {
-            $blockingResults | Format-Table RuleName, Severity, ScriptName, Line -AutoSize
-            throw 'PSScriptAnalyzer reported issues.'
-          }
+          pwsh -NoProfile -File .\scripts\Invoke-PowerShellStaticAnalysis.ps1
 
-      - name: Run Pester
+      - name: Run Pester with coverage
         shell: pwsh
         run: |
           $repoSrc = (Resolve-Path .\src).Path
           $env:PSModulePath = "$repoSrc$([IO.Path]::PathSeparator)$env:PSModulePath"
           Import-Module Pester -MinimumVersion 5.5.0 -Force
-          Invoke-Pester -Path .\Tests -CI
+          $configuration = New-PesterConfiguration
+          $configuration.Run.Path = '.\Tests'
+          $configuration.Run.PassThru = $true
+          $configuration.Output.Verbosity = 'Detailed'
+          $configuration.CodeCoverage.Enabled = $true
+          $configuration.CodeCoverage.Path = @('.\src\*\*.psm1')
+          $configuration.CodeCoverage.OutputFormat = 'JaCoCo'
+          $configuration.CodeCoverage.OutputPath = '.\powershell-coverage.xml'
+          $configuration.CodeCoverage.CoveragePercentTarget = 40
+          $result = Invoke-Pester -Configuration $configuration
+          if ($result.FailedCount -gt 0 -or $result.Result -ne 'Passed') {
+            throw 'Pester tests or coverage threshold failed.'
+          }
+
+      - name: Upload PowerShell coverage
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: powershell-coverage
+          path: powershell-coverage.xml
 
   documentation-quality:
     runs-on: windows-latest

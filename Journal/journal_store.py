@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import os
 import sqlite3
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 JOURNAL_DIR = ROOT_DIR / "Journal"
-CSV_PATH = JOURNAL_DIR / "trades.csv"
-DB_PATH = JOURNAL_DIR / "trades.db"
+CSV_PATH = Path(os.getenv("JOURNAL_CSV_PATH", str(JOURNAL_DIR / "trades.csv"))).resolve()
+DB_PATH = Path(os.getenv("JOURNAL_DB_PATH", str(JOURNAL_DIR / "trades.db"))).resolve()
 CSV_COLUMNS = ["date", "symbol", "side", "qty", "entry_price", "exit_price", "pnl", "notes"]
 
 

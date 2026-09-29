@@ -4,7 +4,10 @@
 
 Paper-only TradingView webhook receiver for bounded BTC signals with immediate Alpaca paper execution.
 
-No UI, no approval step, no retry logic, and no database.
+There is no UI, manual approval step, or automatic execution retry. A local SQLite database stores accepted signal identifiers so duplicate webhooks can be rejected after a restart.
+
+> [!CAUTION]
+> BUG-008 is open. `WEBHOOK_MAX_NOTIONAL` is calculated from the price supplied by the webhook, while Alpaca receives a market order. Keep `WEBHOOK_MAX_QUANTITY` conservatively low and supervise paper tests.
 
 ## Related Repo Guides
 
@@ -55,6 +58,7 @@ btc-signal-executor/
 ├── executor.py
 ├── validator.py
 ├── config.py
+├── safety.py
 ├── .env.example
 ├── requirements.txt
 └── README.md
@@ -118,7 +122,7 @@ curl http://127.0.0.1:8080/health
 Expected response:
 
 ```json
-{"status":"ok","timestamp":"..."}
+{"status":"ok","paper":true,"timestamp":"..."}
 ```
 
 ## Webhook Contract
@@ -158,6 +162,8 @@ Accepted `action` values:
 - `close` attempts to flatten full symbol position via `close_position()`
 - unknown actions fail validation
 - no automatic retry logic
+
+`WEBHOOK_MAX_QUANTITY` is a direct quantity ceiling. `WEBHOOK_MAX_NOTIONAL` is currently an estimate based on the inbound signal price, not a guarantee against the final broker value. See BUG-008 in `ISSUES.md`.
 
 ## End to End Webhook Tests
 

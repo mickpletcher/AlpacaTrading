@@ -1,199 +1,223 @@
 <!-- markdownlint-disable MD013 -->
 
-# Trading Repository
+# AlpacaTrading
 
-Mixed Python and PowerShell trading tooling for Alpaca paper trading, strategy backtesting, journaling, scheduling, and trading workflow learning.
+AlpacaTrading is a Windows-first learning toolkit for backtesting trading ideas, recording trades, and sending orders to an Alpaca paper account.
 
-> [!WARNING]
-> This repository is for education and paper-trading workflow development. It is not financial advice, and it should not be treated as production live-trading software without additional controls.
+Paper trading uses simulated money. This repository cannot place live-money orders. It is for education and testing, not financial advice.
+
+> [!CAUTION]
+> Some commands submit real orders to an Alpaca paper account. Start with the backtest and journal. Do not schedule a bot until you understand its output, current defects, and stop procedure.
+
+## Start Here
+
+Choose the task you want to perform.
+
+| Goal | Start with | Sends an order? |
+| --- | --- | --- |
+| Learn the repository safely | This README, then `Learning Roadmap/README.md` | No |
+| Test a strategy on old market data | `Backtesting/README.md` | No |
+| Record and review trades | `Journal/README.md` | No |
+| Check an Alpaca paper account | `Alpaca/` helpers and examples | No, unless an order command is selected |
+| Run a strategy against an Alpaca paper account | `Backtesting/README.md` | Yes |
+| Run the RSI plus MACD bot | `rsi_macd_bot/README.md` | Yes |
+| Receive TradingView BTC webhooks | `btc-signal-executor/README.md` | Yes |
+| Schedule a tested paper workflow | `Scheduler/README.md` | Depends on the target script |
+| Develop or validate the code | `Tests/README.md` and `PROJECT-STANDARD.md` | No by default |
 
 ## Current Status
 
-- Status: Active, paper-trading and research use only
-- Execution boundary: Python and PowerShell order paths fail closed to Alpaca paper trading
-- Documentation standard: 2.2
-- Project tier: 2
-- Primary technologies: Python, PowerShell, Flask, FastAPI, SQLite
+- Default branch: `main`
+- Intended use: research, learning, and Alpaca paper trading
+- Live trading: unavailable by design
+- Python version used by CI: 3.13
+- PowerShell version recommended: 7 or newer
+- Current defects and cautions: [ISSUES.md](ISSUES.md)
+- Current assessment and test evidence: [docs/repo-audit.md](docs/repo-audit.md)
 
-For current repository health, risks, and priorities, see the [Current Assessment](docs/repo-audit.md).
+The RSI plus MACD bot, BTC executor, and journal currently have open defects. Read the linked component guide and [ISSUES.md](ISSUES.md) before using them.
 
-## What The Project Does Today
+## What It Looks Like
 
-This repository already supports six main workflows:
+These captures use only the repository's deterministic fixture and synthetic journal records. They contain no credentials, account identifiers, or private trading history.
 
-1. Alpaca paper-trading helpers in Python and PowerShell under `Alpaca/`
-2. Strategy research and replay under `Backtesting/`
-3. A browser-based trade journal and CSV/HTML reporting under `Journal/`
-4. Windows and shell scheduling entry points under `Scheduler/`
-5. A standalone RSI plus MACD bot under `rsi_macd_bot/`
-6. A FastAPI webhook executor for BTC signals under `btc-signal-executor/`
+### Reproducible backtest report
 
-The repo also includes a modular PowerShell Alpaca client under `src/`, example PowerShell scripts under `examples/`, Python strategy tests, and PowerShell module tests under `Tests/`.
+![Reproducible backtest report with out-of-sample metrics and walk-forward folds](docs/screenshots/backtest-results.png)
 
-## Documentation
+### Local trade journal
 
-- [Authority Map And Development Rules](PROJECT-STANDARD.md)
-- [Current Assessment](docs/repo-audit.md)
-- [Architecture](ARCHITECTURE.md)
-- [Validation](Tests/README.md)
-- [Operations](OPERATIONS.md)
-- [Defects](ISSUES.md)
-- [Technical Debt](TECH-DEBT.md)
-- [Future Upgrades](FUTURE-UPGRADES.md)
-- [Change History](CHANGELOG.md)
-- [Applied Upgrades](upgrades/README.md)
-- [Core Trading Foundation Spec](specs/001-core-trading-foundation/spec.md)
-- [Backtesting Guide](Backtesting/README.md)
-- [Journal Guide](Journal/README.md)
-- [Scheduler Guide](Scheduler/README.md)
-- [Learning Roadmap](Learning%20Roadmap/README.md)
-- [RSI Plus MACD Bot Guide](rsi_macd_bot/README.md)
-- [BTC Signal Executor Guide](btc-signal-executor/README.md)
+![Local trade journal containing three synthetic trades](docs/screenshots/journal-dashboard.png)
 
-## Recommended Tutorials
+### Paper helper commands
 
-### Tutorial 1: First Safe Walkthrough
+![Credential-free paper helper command output](docs/screenshots/paper-trading-terminal.png)
 
-1. Read the [Learning Roadmap](Learning%20Roadmap/README.md).
-2. Complete the root setup steps in this file.
-3. Run `python .\Backtesting\backtest.py`.
-4. Open the [Journal Guide](Journal/README.md) and run the journal app.
-5. Run the [Tests Guide](Tests/README.md) Python checks.
+## First Safe Setup on Windows 11
 
-### Tutorial 2: Strategy To Review Loop
+Run these commands in PowerShell from the repository root.
 
-1. Use the [Backtesting Guide](Backtesting/README.md) to run one strategy backtest.
-2. Review generated trade output in [Journal](Journal/README.md).
-3. Use the [Scheduler Guide](Scheduler/README.md) only after the manual flow works.
+### 1. Confirm the required tools
 
-### Tutorial 3: Advanced Automation Paths
+```powershell
+python --version
+pwsh --version
+git --version
+```
 
-1. Read [RSI Plus MACD Bot Guide](rsi_macd_bot/README.md) for a scheduled bot loop.
-2. Read [BTC Signal Executor Guide](btc-signal-executor/README.md) for webhook-based execution.
-3. Review the [Project Standard](PROJECT-STANDARD.md), [Applied Upgrades](upgrades/README.md), and relevant numbered spec before structural repo changes.
+Python should report version 3.13 when you want the closest match to CI. If `python` is not found, install Python and select the option that adds it to `PATH`.
 
-## Current Architecture
-
-The repository is a collection of independently executable trading tools rather than one deployable application. See [ARCHITECTURE.md](ARCHITECTURE.md) for evidence, data flow, integrations, storage, and safety boundaries.
-
-## Setup
-
-### Prerequisites
-
-- Python 3.13 recommended
-- PowerShell 7 recommended for module and automation workflows
-- An Alpaca paper account if you want connectivity or paper-trading runs
-
-### Environment Setup
+### 2. Create an isolated Python environment
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-Copy-Item .env.example .env
+python -m pip install --require-hashes -r .\requirements.lock.txt
 ```
 
-Populate `.env` with Alpaca paper credentials before running connectivity or paper-trading commands.
+The virtual environment keeps this project's Python packages separate from other projects.
 
-## Usage
-
-### Run the baseline backtester
-
-```powershell
-python .\Backtesting\backtest.py
-```
-
-### Run the journal app
-
-```powershell
-python .\Journal\journal_server.py
-```
-
-Then open `http://localhost:5000`.
-
-### Run paper trading helpers
-
-```powershell
-python .\Alpaca\paper_trade.py
-pwsh -NoProfile -File .\Alpaca\alpaca_paper.ps1
-```
-
-### Run the Python test suite
+If PowerShell blocks `Activate.ps1`, you can run the environment's Python directly:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest .\Tests -q
 ```
 
-### Run PowerShell module checks manually
+### 3. Run the automated checks before adding credentials
 
 ```powershell
-pwsh -NoProfile -Command "Get-ChildItem .\src -Recurse -Filter *.psd1 | ForEach-Object { Test-ModuleManifest $_.FullName | Out-Null }"
+.\.venv\Scripts\python.exe -m compileall -q Alpaca Backtesting Journal rsi_macd_bot btc-signal-executor Operations Tests
+.\.venv\Scripts\python.exe -m pytest .\Tests -q --cov --cov-config=.coveragerc --cov-fail-under=50
+.\.venv\Scripts\python.exe -m pip check
 ```
+
+Credential-dependent connection tests should report as skipped. A skip is expected when no paper credentials are loaded.
+
+### 4. Run the safest first example
+
+```powershell
+.\.venv\Scripts\python.exe .\Backtesting\reproducible_backtest.py
+```
+
+This verifies a fixed dataset checksum and creates an out-of-sample and walk-forward report without downloading data or placing an order. Open `Backtesting/output/evaluation-report.html`.
+
+### 5. Open the local journal
+
+```powershell
+.\.venv\Scripts\python.exe .\Journal\journal_server.py
+```
+
+Open `http://127.0.0.1:5000` in your browser. Keep the journal on the local machine.
+
+### 6. Add paper credentials only when needed
+
+```powershell
+Copy-Item .\.env.example .\.env
+notepad .\.env
+```
+
+Replace only the placeholder values. Never commit `.env`. Confirm the URL remains:
+
+```dotenv
+ALPACA_BASE_URL=https://paper-api.alpaca.markets
+PAPER=true
+```
+
+## What Each Area Does
+
+| Folder | Plain-language purpose |
+| --- | --- |
+| `Alpaca/` | Direct paper-account helpers and the shared Python paper-only safety boundary |
+| `Backtesting/` | Historical strategy tests and paper execution runners |
+| `Operations/` | Read-only local health checks and generated health reports |
+| `Journal/` | Local browser journal, SQLite data, CSV exchange, and reports |
+| `Scheduler/` | Windows and shell launchers for an already tested workflow |
+| `rsi_macd_bot/` | Automated stock scanner and paper-order bot |
+| `btc-signal-executor/` | FastAPI service that converts authenticated TradingView signals into paper orders |
+| `src/` | Reusable PowerShell modules for Alpaca configuration, data, orders, positions, streams, and risk |
+| `examples/` | Small PowerShell examples for the reusable modules |
+| `Tests/` | Python and PowerShell automated checks |
+| `specs/` | Numbered packages describing non-trivial repository changes |
+
+The folders are separate tools. The repository is not one installable application.
+
+## Essential Terms
+
+| Term | Meaning |
+| --- | --- |
+| Paper trading | Simulated trading through Alpaca. No live money is used. |
+| Backtest | A replay of strategy rules against historical data. It cannot prove future profit. |
+| Strategy | A set of rules that decides when to buy, sell, or do nothing. |
+| Signal | A strategy result such as buy, sell, or close. |
+| Order | A request sent to Alpaca to buy or sell an asset. |
+| Position | An asset quantity currently held in the paper account. |
+| Stop order | An order intended to reduce a position after price reaches a specified level. |
+| Webhook | An HTTP request sent by another service, such as TradingView. |
+| Circuit breaker | A control that temporarily blocks new activity after configured failures or losses. |
+| SQLite | A local database stored in one file. The journal and webhook replay guard use it. |
+| `.env` file | A local configuration file for secrets and settings. Git ignores it. |
+
+## Safety Rules
+
+1. Use only Alpaca paper credentials.
+2. Never commit `.env`, API keys, passphrases, account identifiers, databases, logs, or journal exports.
+3. Run a workflow manually before scheduling it.
+4. Confirm open orders and positions in Alpaca after every test involving execution.
+5. Stop the process and disable its schedule before troubleshooting unexpected orders.
+6. Do not treat a successful backtest as evidence that a strategy will make money.
+7. Read [ISSUES.md](ISSUES.md) before running an automated order path.
+
+## Common First-Run Problems
+
+| Problem | What it means | What to do |
+| --- | --- | --- |
+| `python` is not recognized | Python is missing from `PATH` | Install Python 3.13 or use its full executable path |
+| PowerShell blocks activation | Script execution policy prevented `Activate.ps1` | Use `.venv\Scripts\python.exe` directly |
+| Missing Alpaca key or secret | The workflow needs paper credentials | Create `.env` from `.env.example` and add paper keys |
+| Three tests are skipped | Paper credentials are intentionally absent | This is expected for the default local test run |
+| Backtest has no trades | No signal occurred in that symbol and date range | Try a wider range or another liquid symbol |
+| Journal opens with no trades | The database is new or CSV data was not imported | Add a sample trade or follow the explicit CSV import instructions |
+
+## Documentation Map
+
+- [Learning roadmap](Learning%20Roadmap/README.md)
+- [Backtesting guide](Backtesting/README.md)
+- [Journal guide](Journal/README.md)
+- [Scheduler guide](Scheduler/README.md)
+- [RSI plus MACD bot guide](rsi_macd_bot/README.md)
+- [BTC signal executor guide](btc-signal-executor/README.md)
+- [Testing guide](Tests/README.md)
+- [Operations and recovery](OPERATIONS.md)
+- [Architecture](ARCHITECTURE.md)
+- [Current assessment](docs/repo-audit.md)
+- [Current defects](ISSUES.md)
+- [Technical debt](TECH-DEBT.md)
+- [Future upgrades](FUTURE-UPGRADES.md)
+- [Development rules](PROJECT-STANDARD.md)
 
 ## Development Workflow
 
-Future repository work should follow the retrofit GitHub Spec process now included in this repo:
+Non-trivial changes use a numbered folder under `specs/` containing requirements, a technical specification, a plan, and tasks. Runtime changes must update tests and the affected living documentation. See [PROJECT-STANDARD.md](PROJECT-STANDARD.md) for the complete rules.
 
-1. Capture the change in `specs/<NNN-name>/requirements.md`
-2. Convert requirements into implementation detail in `spec.md`
-3. Create an execution plan in `plan.md`
-4. Break the work into discrete tasks in `tasks.md`
-5. Implement with the spec open and update docs/tests alongside code
-6. Run an audit against the completed change
-7. Run regression checks before merge
+Install from `requirements.lock.txt`. When a direct requirement changes, regenerate and verify the lock:
 
-Validation procedures and current limitations are maintained in [Tests/README.md](Tests/README.md). Current executed results are maintained in the [Current Assessment](docs/repo-audit.md).
+```powershell
+pwsh -NoProfile -File .\scripts\Update-PythonLock.ps1
+```
 
-## GitHub Spec Workflow
+Run the complete release validation before creating a release:
 
-This repository now includes:
-
-- `AGENTS.md` for authoritative repo-specific implementation guidance
-- `.github/prompts/` for reusable requirements, spec, plan, task, audit, regression, and release prompts
-- `specs/001-core-trading-foundation/` as the baseline spec retrofit for the current repository state
-- `docs/repo-audit.md` as the current repository assessment
-- `upgrades/README.md` as the applied-upgrades log for repo-level improvements
-
-When adding a new feature, create the next numbered folder under `specs/` and keep the change grounded in the current architecture rather than reimagining the project.
-
-## Repository Structure
-
-```text
-Trading/
-|-- .github/
-|   |-- copilot-instructions.md
-|   |-- prompts/
-|   `-- workflows/
-|-- docs/
-|   |-- repo-audit.md
-|   |-- decisions/
-|   `-- screenshots/
-|-- specs/
-|   |-- 001-core-trading-foundation/
-|   `-- 002-living-documentation-standard/
-|-- src/
-|-- Alpaca/
-|-- Backtesting/
-|-- Journal/
-|-- Scheduler/
-|-- rsi_macd_bot/
-|-- btc-signal-executor/
-|-- examples/
-|-- Tests/
-|-- AGENTS.md
-|-- ARCHITECTURE.md
-|-- OPERATIONS.md
-|-- PROJECT-STANDARD.md
-|-- .env.example
-|-- .gitignore
-|-- pytest.ini
-|-- README.md
-`-- requirements.txt
+```powershell
+pwsh -NoProfile -File .\scripts\Invoke-ReleaseValidation.ps1
 ```
 
 ## Known Limitations
 
-See [ISSUES.md](ISSUES.md) for active defects and [TECH-DEBT.md](TECH-DEBT.md) for accepted implementation risks. The BTC webhook is paper-only and requires the limits, replay database, passphrase, and ingress controls documented in its component guide.
+- Live trading is intentionally unavailable.
+- The reproducible evaluator uses a deterministic synthetic fixture. A real evaluation must use a reviewed fixed dataset with its checksum recorded in the configuration.
+- Health and alerting are local. There is no centralized remote monitoring service.
+- Releases snapshot the repository but do not package the separate tools into one application.
+- Current verified defects are tracked in [ISSUES.md](ISSUES.md).
 
 <!-- markdownlint-enable MD013 -->

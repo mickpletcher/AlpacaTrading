@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "dataset": {
+    "path": "datasets/sample_daily.csv",
+    "sha256": "705a40778a33e8c148748d0c906238a19a28b4c8cb0d5ae7ec36ac3bf4818ab1",
+    "symbol": "SAMPLE",
+    "source": "Deterministic synthetic fixture for validation and examples"
+  },
+  "costs": {
+    "commission_bps": 5.0,
+    "slippage_bps": 3.0
+  },
+  "fixed_split": {
+    "training_bars": 220,
+    "out_of_sample_bars": 100
+  },
+  "walk_forward": {
+    "training_bars": 120,
+    "test_bars": 40,
+    "step_bars": 40
+  },
+  "parameter_grid": [
+    {"fast": 5, "slow": 20},
+    {"fast": 9, "slow": 21},
+    {"fast": 12, "slow": 30}
+  ]
+}

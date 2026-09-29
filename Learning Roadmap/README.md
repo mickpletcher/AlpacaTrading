@@ -77,7 +77,7 @@ Checklist:
 1. read the root README glossary
 2. create an Alpaca paper account
 3. run the connectivity test
-4. run `Backtesting/backtest.py`
+4. run `Backtesting/reproducible_backtest.py`
 5. open the journal app
 
 ### Phase 1: EMA crossover
@@ -173,10 +173,12 @@ Why this phase is late:
 - it combines signal logic with order routing and risk controls
 - mistakes can execute immediately if setup is wrong
 
+Current status: blocked for unattended use by BUG-007. You may inspect the code and tests, but do not schedule the bot until the order lifecycle is fixed.
+
 Run it:
 
 ```powershell
-python -m pip install -r .\rsi_macd_bot\requirements.txt
+python -m pip install --require-hashes -r .\requirements.lock.txt
 python .\rsi_macd_bot\bot.py
 ```
 
@@ -185,6 +187,8 @@ What to verify first:
 - `.env` has valid keys and `PAPER=true`
 - `rsi_macd_bot/trades.log` shows understandable signal and action rows
 - no API errors are repeating before you leave it running unattended
+
+Do not leave it running unattended while BUG-007 is open. Live-money execution is unavailable throughout this repository.
 
 ## Suggested Month by Month Path
 

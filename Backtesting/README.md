@@ -24,7 +24,7 @@ If you are new to trading, a backtest is a replay of a strategy on historical ma
 ### Tutorial 1: First Historical Run
 
 1. Follow the root setup in [README.md](../README.md).
-2. Run `python .\Backtesting\backtest.py`.
+2. Run `python .\Backtesting\reproducible_backtest.py`.
 3. Review output expectations in this guide.
 
 ### Tutorial 2: Strategy Backtest To Journal Review
@@ -60,6 +60,9 @@ Do not use this folder when you only need:
 
 | File | Purpose |
 | --- | --- |
+| `reproducible_backtest.py` | Deterministic EMA evaluation with a fixed dataset, costs, benchmark, out-of-sample period, and walk-forward folds |
+| `evaluation-config.json` | Versioned research assumptions and candidate parameters |
+| `datasets/sample_daily.csv` | Fixed synthetic daily dataset used by the reproducible evaluator |
 | `backtest.py` | Simple multi strategy backtester using Yahoo Finance data and the `backtesting.py` library |
 | `README.md` | This module guide |
 
@@ -69,19 +72,19 @@ Do not use this folder when you only need:
 | --- | --- |
 | `ema_crossover.py` | Shared EMA strategy logic |
 | `backtest_ema.py` | EMA backtest using Alpaca historical bars |
-| `live_ema.py` | EMA live or paper runner |
+| `live_ema.py` | EMA paper runner. The file name is legacy; live-money execution is blocked |
 | `bollinger_rsi.py` | Shared Bollinger plus RSI strategy logic |
 | `backtest_bollinger_rsi.py` | Bollinger plus RSI backtest using Alpaca daily bars |
-| `live_bollinger_rsi.py` | Bollinger plus RSI live or paper runner |
+| `live_bollinger_rsi.py` | Bollinger plus RSI paper runner. Live-money execution is blocked |
 | `bb_rsi_strategy.py` | Backtrader based Bollinger plus RSI workflow |
 | `backtest_bb_rsi.py` | Backtrader runner using Alpaca market data |
 | `latest_bb_rsi_signal.py` | One shot signal check for the latest Bollinger plus RSI setup |
 | `gap_momentum.py` | Shared intraday gap up momentum strategy logic |
 | `backtest_gap_momentum.py` | Gap momentum backtest using Alpaca minute and daily bars |
-| `live_gap_momentum.py` | Gap momentum live or paper runner |
+| `live_gap_momentum.py` | Gap momentum paper runner. Live-money execution is blocked |
 | `rsi_stack.py` | Shared multi timeframe RSI stack strategy logic |
 | `backtest_rsi_stack.py` | RSI stack backtest using Alpaca bars |
-| `live_rsi_stack.py` | RSI stack live or paper runner |
+| `live_rsi_stack.py` | RSI stack paper runner. Live-money execution is blocked |
 | `run_ema.ps1` | PowerShell wrapper for EMA workflows |
 | `run_bollinger_rsi.ps1` | PowerShell wrapper for Bollinger plus RSI workflows |
 | `run_gap_momentum.ps1` | PowerShell wrapper for gap momentum workflows |
@@ -90,15 +93,15 @@ Do not use this folder when you only need:
 ## Prerequisites
 
 - Python virtual environment activated
-- dependencies installed from `requirements.txt`
+- dependencies installed from `requirements.lock.txt`
 - `.env` created if you plan to use Alpaca based strategy scripts
 - valid Alpaca paper keys for all Alpaca based backtests and live runners
 
-`Backtesting/backtest.py` is the main exception. It uses Yahoo Finance and does not need Alpaca keys.
+`Backtesting/reproducible_backtest.py` needs no credentials or network connection. `Backtesting/backtest.py` uses Yahoo Finance and also does not need Alpaca keys, but it downloads changing market data.
 
 ## Setup Steps
 
-1. Start with `backtest.py` if you want the simplest first run.
+1. Start with `reproducible_backtest.py` if you want the simplest and repeatable first run.
 2. Move to strategy specific runners only after the simple backtest works.
 3. Use paper trading only after you understand the backtest output and expected behavior.
 
@@ -113,23 +116,40 @@ Do not use this folder when you only need:
 
 ## Run Commands
 
-### Easiest first backtest
+### Reproducible first backtest
+
+```powershell
+python .\Backtesting\reproducible_backtest.py
+```
+
+This run:
+
+- verifies the fixed dataset checksum before calculation
+- selects EMA parameters using only the training period
+- applies commission and slippage to strategy returns
+- compares the fixed out-of-sample result with buy and hold
+- runs expanding-window walk-forward folds
+
+Expected output:
+
+- a concise result summary in the terminal
+- `Backtesting/output/evaluation-report.json`
+- `Backtesting/output/walk-forward.csv`
+- `Backtesting/output/evaluation-report.html`
+
+To change a research assumption, copy `evaluation-config.json`, edit the copy, and pass it explicitly:
+
+```powershell
+python .\Backtesting\reproducible_backtest.py --config C:\path\to\evaluation-config.json --output C:\path\to\output
+```
+
+### Legacy online strategy comparison
 
 ```powershell
 python .\Backtesting\backtest.py
 ```
 
-This tests:
-
-- EMA crossover
-- RSI mean reversion
-- EMA plus RSI filter
-
-Expected output:
-
-- download message for the selected symbol
-- per strategy metrics such as return, Sharpe ratio, win rate, and trade count
-- `backtest_results.html` created in the current working directory
+This downloads current Yahoo Finance history. Use it for exploration, not as the reproducible comparison baseline.
 
 ### Strategy specific Alpaca backtests
 
@@ -169,9 +189,11 @@ python .\Backtesting\strategies\backtest_rsi_stack.py --symbol SPY --start 2023-
 python .\Backtesting\strategies\backtest_gap_momentum.py --symbol SPY --start 2024-01-01 --end 2026-01-01 --gap-threshold 0.02 --momentum-bars 3 --stop-loss 0.015 --take-profit 0.04 --volume-multiplier 1.5
 ```
 
-### Live paper runners
+### Paper execution runners
 
 Run these only after the matching backtest makes sense to you.
+
+The `live_` prefix is an old file name. These scripts use the shared paper-only client and reject live trading. Unlike a backtest, they can submit orders to the Alpaca paper account.
 
 ```powershell
 python .\Backtesting\strategies\live_ema.py --symbol SPY --fast 9 --slow 21
@@ -196,10 +218,10 @@ pwsh -NoProfile -File .\Backtesting\strategies\run_gap_momentum.ps1 -Mode backte
 ### Example 1: Beginner first run
 
 ```powershell
-python .\Backtesting\backtest.py
+python .\Backtesting\reproducible_backtest.py
 ```
 
-Use this first if you want to see a complete backtest without needing Alpaca credentials.
+Use this first if you want a complete backtest without credentials, downloads, or changing input data.
 
 ### Example 2: Strategy specific EMA run with Alpaca data
 
@@ -220,6 +242,9 @@ Expected output:
 Depending on which script you run, this module may update:
 
 - `backtest_results.html`
+- `Backtesting/output/evaluation-report.json`
+- `Backtesting/output/walk-forward.csv`
+- `Backtesting/output/evaluation-report.html`
 - `Journal/trades.csv`
 - `Journal/live_ema_log.txt`
 - `Journal/live_bollinger_rsi_log.txt`
@@ -230,7 +255,7 @@ Depending on which script you run, this module may update:
 ## Common Mistakes
 
 - treating a profitable backtest as proof of a good live strategy
-- forgetting that `backtest.py` and the Alpaca strategy scripts use different data sources
+- treating the changing Yahoo Finance run as equivalent to the fixed reproducible evaluator
 - using a date range that returns too little data
 - moving to live paper runners before reading the strategy logic and output
 - forgetting that the intraday gap strategy is time sensitive
@@ -261,8 +286,9 @@ Do not use it when:
 
 ## TODO and Known Gaps
 
-1. `backtest.py` uses Yahoo Finance, while most strategy specific scripts use Alpaca data. The output will not always match across those paths.
-2. Some live runners are less configurable from the command line than their matching backtest scripts.
-3. Completed strategy trades are written to `Journal/trades.csv`, and the journal app now syncs those rows into SQLite when the journal is opened or refreshed.
+1. The reproducible evaluator currently covers one long-only EMA crossover model and one fixed synthetic daily dataset.
+2. `backtest.py` uses Yahoo Finance, while most strategy specific scripts use Alpaca data. Their output will not match the fixed evaluation path.
+3. Some live runners are less configurable from the command line than their matching backtest scripts.
+4. Completed strategy trades are written to `Journal/trades.csv`, and the journal app syncs those rows into SQLite when explicitly imported.
 
 <!-- markdownlint-enable MD013 -->

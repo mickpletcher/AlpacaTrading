@@ -6,6 +6,9 @@ This folder helps you run trading scripts automatically instead of manually star
 
 If you are new to scheduling, think of this as a timed launcher. It does not invent trading logic. It only starts the right script at the right time and records what happened.
 
+> [!CAUTION]
+> A scheduler repeats mistakes without waiting for you. Do not schedule the RSI plus MACD bot while BUG-007 is open. Test every target manually under the same user account first.
+
 ## Related Repo Guides
 
 - [Root README](../README.md)
@@ -43,6 +46,7 @@ Use this folder when you want to:
 - launch a paper trading entry point on a schedule
 - load `.env` values automatically before the run starts
 - capture run timestamps and exit codes in a log file
+- publish a machine-readable last-run status for the local health check
 
 Do not use this folder when you need:
 
@@ -81,6 +85,14 @@ Scheduler logs are written to:
 Journal/scheduler_log.txt
 ```
 
+The latest run state is written atomically to:
+
+```text
+Journal/scheduler_status.json
+```
+
+The status contains the start time, completion time, exit code, and final state. The local health command uses it to detect stale or failed scheduler runs.
+
 ## Windows PowerShell Usage
 
 ### Run shell launcher manually
@@ -92,6 +104,7 @@ pwsh -NoProfile -File .\Scheduler\run_strategy.ps1
 Expected success:
 
 - a new line is added to `Journal/scheduler_log.txt`
+- `Journal/scheduler_status.json` is refreshed
 - the script launches the paper trading entry point
 - the log records `ExitCode=...`
 
@@ -144,7 +157,7 @@ For the fully automated RSI plus MACD bot, schedule this entry point directly:
 rsi_macd_bot/bot.py
 ```
 
-The bot setup guide is in `rsi_macd_bot/README.md` and runtime logs are written to `rsi_macd_bot/trades.log`.
+The bot setup guide is in `rsi_macd_bot/README.md` and runtime logs are written to `rsi_macd_bot/trades.log`. Do not schedule it until BUG-007 is fixed.
 
 For TradingView webhook driven BTC execution, run and supervise:
 
@@ -175,6 +188,7 @@ Get-Content .\Journal\scheduler_log.txt -Tail 5
 ```bash
 bash ./Scheduler/run_strategy.sh
 tail -n 5 ./Journal/scheduler_log.txt
+cat ./Journal/scheduler_status.json
 ```
 
 ## Expected Output

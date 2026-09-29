@@ -4,6 +4,29 @@
 
 This file is the authoritative validation procedure. Per-change results belong in the completion report, commit, or pull request. They do not accumulate here.
 
+Validation means running repeatable checks that catch syntax errors, broken behavior, invalid PowerShell modules, dependency conflicts, and documentation gaps. A passing test suite reduces risk, but it does not prove that a strategy is profitable or that Alpaca will accept every paper order.
+
+## Beginner Quick Check
+
+Run this from the repository root after setup:
+
+```powershell
+.\.venv\Scripts\python.exe -m compileall -q Alpaca Backtesting Journal rsi_macd_bot btc-signal-executor Operations Tests
+.\.venv\Scripts\python.exe -m pytest .\Tests -q --cov --cov-config=.coveragerc --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=50
+.\.venv\Scripts\python.exe -m pip check
+pwsh -NoProfile -File .\scripts\docs-check.ps1 -FailOnGap
+```
+
+How to read the result:
+
+- `passed` means a test completed successfully.
+- `failed` means the change should not be treated as ready.
+- `skipped` means a test intentionally did not run. The normal reason here is missing paper credentials.
+- a warning is not the same as a failure, but it still needs review.
+- an exit code of `0` means the command reported success.
+
+These default Python checks do not submit orders.
+
 ## Environment Requirements
 
 - Python matching the supported CI version when release confidence is required. CI currently uses Python 3.13.
@@ -12,14 +35,23 @@ This file is the authoritative validation procedure. Per-change results belong i
 - PSScriptAnalyzer.
 - No live Alpaca credentials in the default validation environment.
 
+Install the PowerShell validation modules once for the current user if they are not already available:
+
+```powershell
+Install-Module Pester -MinimumVersion 5.5.0 -Scope CurrentUser -Force
+Install-Module PSScriptAnalyzer -MinimumVersion 1.24.0 -Scope CurrentUser -Force
+```
+
 Create a clean virtual environment before dependency or release validation:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -r .\requirements.txt -r .\rsi_macd_bot\requirements.txt -r .\btc-signal-executor\requirements.txt
+python -m pip install --require-hashes -r .\requirements.lock.txt
 ```
+
+If the requirement files changed after `.venv` was created, refresh the environment with the install command again or delete and recreate the environment yourself. `pip check` only checks what is currently installed.
 
 ## Basic Validation
 
@@ -28,7 +60,7 @@ Use for documentation, internal tooling, and low-risk refactors.
 ### Python syntax
 
 ```powershell
-python -m compileall -q Alpaca Backtesting Journal rsi_macd_bot btc-signal-executor
+python -m compileall -q Alpaca Backtesting Journal rsi_macd_bot btc-signal-executor Operations Tests
 ```
 
 Expected exit code: 0. Typical runtime: under one minute.
@@ -36,10 +68,14 @@ Expected exit code: 0. Typical runtime: under one minute.
 ### Python unit tests
 
 ```powershell
-python -m pytest .\Tests -q
+python -m pytest .\Tests -q --cov --cov-config=.coveragerc --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=50
 ```
 
 Expected exit code: 0. Credential-dependent tests may skip. Every completion report must state the skip count and reason.
+
+The Python suite must maintain at least 50 percent total statement coverage. CI uploads `coverage.xml` so gaps can be reviewed without changing the threshold blindly.
+
+The tests use fake clients and temporary files for normal order, risk, journal, and webhook checks. They do not need real credentials.
 
 ### PowerShell module validation
 
@@ -67,12 +103,7 @@ Expected exit code: 0 with no `MISSING` or `REVIEW` rows.
 ## Full Static Validation
 
 ```powershell
-Import-Module PSScriptAnalyzer
-$files = Get-ChildItem .\src,.\Alpaca,.\Backtesting,.\Scheduler,.\examples -Recurse -Include *.ps1,*.psm1 -File
-$results = $files | ForEach-Object {
-    Invoke-ScriptAnalyzer -Path $_.FullName -Settings .\PSScriptAnalyzerSettings.psd1
-}
-$results | Group-Object RuleName,Severity | Sort-Object Count -Descending
+pwsh -NoProfile -File .\scripts\Invoke-PowerShellStaticAnalysis.ps1
 ```
 
 Expected result: no `Error` or `ParseError`. Existing warnings are tracked under TD-004 and must be reported, not hidden.
@@ -84,10 +115,12 @@ Risk tests inject Pester's temporary test directory into `Initialize-AlpacaRisk`
 The command is:
 
 ```powershell
-pwsh -NoProfile -Command "Import-Module Pester -MinimumVersion 5.5.0 -Force; Invoke-Pester -Path .\Tests -CI"
+pwsh -NoProfile -Command "$config=New-PesterConfiguration; $config.Run.Path='.\Tests'; $config.Run.Exit=$true; $config.CodeCoverage.Enabled=$true; $config.CodeCoverage.Path=@('.\src\*\*.psm1'); $config.CodeCoverage.OutputFormat='JaCoCo'; $config.CodeCoverage.OutputPath='powershell-coverage.xml'; $config.CodeCoverage.CoveragePercentTarget=40; Invoke-Pester -Configuration $config"
 ```
 
 For changes to either injection boundary, compare the operational risk-state hash before and after the suite and inspect the test implementation for direct network calls.
+
+The PowerShell suite must maintain at least 40 percent command coverage across the reusable modules in `src/`. CI uploads `powershell-coverage.xml`.
 
 ## Integration Validation
 
@@ -100,6 +133,8 @@ python -m pytest .\Tests\test_connection.py -v
 Expected exit code: 0. Without `ALPACA_API_KEY` and `ALPACA_SECRET_KEY`, the tests skip. Record that as a waiver for changes that require provider-contract assurance.
 
 Do not submit orders merely to prove connectivity.
+
+Connectivity proves only that the credentials and endpoint respond. It does not prove that order sizing, protection, exits, or strategy logic are correct.
 
 ## Component Validation
 
@@ -115,10 +150,17 @@ Do not submit orders merely to prove connectivity.
 ## Dependency Validation
 
 ```powershell
+python -m pip install --require-hashes -r .\requirements.lock.txt
 python -m pip check
 ```
 
 Expected exit code: 0 in a clean supported environment. Dependabot and CodeQL provide hosted dependency and code scanning after changes reach GitHub.
+
+When a direct requirement changes, regenerate the reviewed lock from Python 3.13:
+
+```powershell
+pwsh -NoProfile -File .\scripts\Update-PythonLock.ps1
+```
 
 ## Validation Matrix
 
@@ -136,6 +178,9 @@ Expected exit code: 0 in a clean supported environment. Dependabot and CodeQL pr
 
 - Live Alpaca integration is absent from default checks because credentials are intentionally unavailable.
 - Distributed webhook rate limiting and replay storage are not tested because the service is currently single-process.
-- Backtest quality remains research grade. See TD-006.
+- The fixed reproducible evaluator covers one EMA strategy and one synthetic daily dataset. Other strategy backtests still use their existing data sources and assumptions.
+- The RSI plus MACD suite does not yet cover the complete entry, protective-stop, cancellation, exit, partial-fill, and recovery lifecycle. See BUG-007.
+- The journal suite does not yet include stored HTML injection regression cases. See BUG-009.
+- Coverage thresholds are repository-wide starting points. Safety-critical order lifecycle paths still need focused regression coverage as defects are fixed.
 
 <!-- markdownlint-enable MD013 MD024 MD060 -->

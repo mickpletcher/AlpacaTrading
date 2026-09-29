@@ -6,6 +6,9 @@ This folder helps you review what happened after a trade or a strategy run.
 
 It includes a browser based journal, CSV exports, logs, and an HTML summary report.
 
+> [!CAUTION]
+> BUG-009 is open. Keep the journal on `127.0.0.1` and do not import CSV files from an untrusted source. Stored text is not yet rendered safely in every table.
+
 ## Related Repo Guides
 
 - [Root README](../README.md)
@@ -86,7 +89,7 @@ In this repo, several strategy scripts write trade rows to `trades.csv`. SQLite 
 ## Prerequisites
 
 - Python virtual environment activated
-- dependencies installed from `requirements.txt`
+- dependencies installed from `requirements.lock.txt`
 - web browser available on your machine
 
 ## Setup Steps
@@ -108,6 +111,10 @@ Then open:
 ```text
 http://localhost:5000
 ```
+
+Only use the journal from the same computer. Do not change the server to listen on every network interface.
+
+For isolated testing, set `JOURNAL_DB_PATH`, `JOURNAL_CSV_PATH`, and `JOURNAL_PORT` before startup. This keeps test or demonstration records out of the normal journal files.
 
 ### CSV journal analysis report
 
@@ -206,6 +213,7 @@ Typical flow:
 - assuming strategy CSV rows are imported automatically
 - expecting the AI prompt feature to call Anthropic directly
 - treating journal stats as enough evidence to trade live
+- importing a CSV received from an untrusted person or website while BUG-009 is open
 
 ## Troubleshooting
 

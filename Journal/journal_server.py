@@ -18,6 +18,7 @@
 
 from flask import Flask, Response, jsonify, request, send_from_directory
 import argparse
+import os
 import sqlite3
 import io
 from datetime import datetime
@@ -346,6 +347,7 @@ if __name__ == "__main__":
         connection.close()
         print(f"Imported {count} trade(s) from {CSV_PATH}.")
         raise SystemExit(0)
-    print("\n📓 Trade Journal running at http://localhost:5000")
+    port = int(os.getenv("JOURNAL_PORT", "5000"))
+    print(f"\nTrade Journal running at http://localhost:{port}")
     print("   Press Ctrl+C to stop.\n")
-    app.run(debug=False, host="127.0.0.1", port=5000)
+    app.run(debug=False, host="127.0.0.1", port=port)

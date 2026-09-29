@@ -105,4 +105,34 @@ The BTC webhook is paper-only. It enforces a ticker allowlist, finite quantity a
 
 The repository remains paper-only. Live Python order routing cannot be enabled through an environment value or source constant. Enabling live execution requires a separate approved Class 4 design.
 
+## Upgrade 005: Reproducible research and operations foundation
+
+### Summary
+
+Added repeatable strategy evaluation, local health reporting, coverage gates, a locked Python environment, real sanitized screenshots, and a guarded release workflow.
+
+### What Changed
+
+- added a fixed checksum-protected dataset and versioned evaluation configuration
+- added transaction costs, a buy-and-hold benchmark, a fixed out-of-sample period, parameter selection on training data, and expanding-window walk-forward results
+- added local JSON and HTML health reporting for stale files, rejected orders, missing protective stops, circuit-breaker state, and scheduler failures
+- made both scheduler launchers publish a machine-readable last-run status
+- added Python and PowerShell coverage reports with 50 percent and 40 percent minimums
+- added a hash-verified Python 3.13 dependency lock and regeneration script
+- replaced placeholder artwork with sanitized screenshots captured from the running local tools
+- added full release validation and a guarded changelog, tag, push, and GitHub release script
+
+### Resolved work
+
+- FU-002: Reproducible strategy evaluation pipeline
+- FU-003: Local operational status and alerting
+- FU-004: Test coverage reporting
+- FU-005: Tagged release snapshots
+- TD-006: Strategy evaluation reproducibility
+- TD-009: Python dependency reproducibility
+
+### Outcome
+
+The repository now has a deterministic baseline for comparing one EMA strategy, visible local operational failures, enforced coverage floors, repeatable installs, truthful screenshots, and a single documented release path. These controls do not claim profitability or replace paper-account supervision.
+
 <!-- markdownlint-enable MD013 MD024 -->

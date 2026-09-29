@@ -6,6 +6,9 @@ This module provides a fully automated RSI plus MACD signal bot built with Alpac
 
 It places market orders when RSI and MACD confirmation occur within a configured window, then places a stop loss after each buy.
 
+> [!CAUTION]
+> BUG-007 is open. The bot does not yet manage the entry, protective stop, and later exit as one complete lifecycle. Do not run it unattended. After each paper test, review both Positions and Orders in Alpaca.
+
 ## Related Repo Guides
 
 - [Root README](../README.md)
@@ -86,6 +89,8 @@ SELL requires:
 - submit day market order
 - submit stop order at entry times `(1 - RISK_PER_TRADE)`
 
+The current stop is a separate order. A later signal-based sell does not cancel that stop first. A stop submission failure can also leave the new position without a protective order. These cases are tracked as BUG-007.
+
 ## Setup
 
 From repo root:
@@ -110,6 +115,10 @@ PAPER=true
 python .\rsi_macd_bot\bot.py
 ```
 
+The process waits for market hours and scans every five minutes. No output does not necessarily mean it is broken. Check `trades.log` and the Alpaca paper dashboard.
+
+To stop it, press `Ctrl+C`. Stopping the process does not cancel paper orders already accepted by Alpaca.
+
 ## Logging
 
 Events are written to:
@@ -131,13 +140,15 @@ Format:
 | Bot fails at startup | missing API key or secret | update `.env` with valid Alpaca credentials |
 | Bot runs but no orders | market closed or no qualifying signals | confirm market hours and inspect `trades.log` signals |
 | Order rejected | buying power, symbol status, or account restrictions | check logged API code and Alpaca dashboard |
-| Stop order missing | buy fill price not returned quickly | inspect logs and increase fill wait retries if needed |
+| Stop order missing | fill confirmation or stop submission failed | stop the bot, inspect Orders and Positions, and do not leave the position unattended |
+| Position is closed but a stop remains open | BUG-007 order lifecycle gap | cancel the unmatched paper stop and keep the bot stopped |
 
 ## Safety
 
 - keep `PAPER=true` during validation
 - start with small sizing values
 - review logs daily for skipped actions and API errors
-- move to live mode only after repeatable paper behavior
+- keep the bot supervised until BUG-007 is fixed and regression-tested
+- live mode is unavailable in this repository
 
 <!-- markdownlint-enable MD013 -->
