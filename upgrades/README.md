@@ -135,4 +135,34 @@ Added repeatable strategy evaluation, local health reporting, coverage gates, a 
 
 The repository now has a deterministic baseline for comparing one EMA strategy, visible local operational failures, enforced coverage floors, repeatable installs, truthful screenshots, and a single documented release path. These controls do not claim profitability or replace paper-account supervision.
 
+## Upgrade 006: GitHub repository hardening
+
+### Summary
+
+Enforced the repository's pull request, security scanning, merge, workflow dependency, vulnerability reporting, and release tag policies.
+
+### What Changed
+
+- protected `main` with required pull requests, zero approvals for the sole maintainer, administrator enforcement, strict current-branch checks, conversation resolution, and linear history
+- required Python, PowerShell, documentation, and CodeQL checks before merge
+- restricted Actions to reviewed GitHub-owned actions and required full commit SHA references
+- pinned Pester 5.7.1 and PSScriptAnalyzer 1.24.0 exactly
+- enabled squash-only merging, automatic source-branch deletion, and update-branch support
+- added `SECURITY.md`, enabled private vulnerability reporting, and protected `v*` tags from update or deletion
+- disabled unused Wiki and Projects features
+- replaced reflected journal conversion errors with stable responses and rejected non-finite inputs and computed P&L before persistence
+
+### Resolved work
+
+- BUG-010: The two medium journal response alerts and three workflow permission alerts are fixed. The post-merge CodeQL scan reports zero open alerts.
+- TD-008: Repository merge and quality gates now enforce the intended workflow, including administrators.
+
+### Validation
+
+Pull request 17 passed Python, PowerShell, documentation, and CodeQL checks before squash merge. Post-merge runs 36525657007 and 36525656614 passed on `main` commit `0e12e8eb121d13959e65aaab870cbca31e084154`.
+
+### Outcome
+
+Repository delivery now fails closed on the required quality and security checks. The trading boundary remains paper-only.
+
 <!-- markdownlint-enable MD013 MD024 -->

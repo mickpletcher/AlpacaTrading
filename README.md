@@ -189,6 +189,7 @@ The folders are separate tools. The repository is not one installable applicatio
 - [BTC signal executor guide](btc-signal-executor/README.md)
 - [Testing guide](Tests/README.md)
 - [Operations and recovery](OPERATIONS.md)
+- [Security policy and vulnerability reporting](SECURITY.md)
 - [Architecture](ARCHITECTURE.md)
 - [Current assessment](docs/repo-audit.md)
 - [Current defects](ISSUES.md)

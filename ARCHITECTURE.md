@@ -24,6 +24,7 @@ Evidence: `src/Alpaca.*`, `Alpaca/`, `Backtesting/`, `Journal/`, `Scheduler/`, `
 | BTC executor | FastAPI webhook that converts inbound signals into Alpaca orders | `btc-signal-executor/main.py`, `btc-signal-executor/executor.py` |
 | Validation | Python pytest and PowerShell Pester suites | `Tests/test_*.py`, `Tests/*.Tests.ps1` |
 | Release | Locked validation, changelog consolidation, tagging, pushing, and GitHub release creation | `requirements.lock.txt`, `scripts/Invoke-ReleaseValidation.ps1`, `scripts/New-Release.ps1` |
+| Repository delivery | Protected pull requests, required CI and CodeQL, squash-only merges, and protected release tags | `.github/workflows/ci.yml`, `SECURITY.md`, `docs/decisions/002-github-repository-hardening.md` |
 
 ## Application Entry Points
 
@@ -85,6 +86,7 @@ Evidence: `requirements.txt`, `rsi_macd_bot/requirements.txt`, `btc-signal-execu
 - Top-level feature folders are stable boundaries.
 - Python and PowerShell order paths are restricted to the exact Alpaca paper endpoint. Live execution is unavailable.
 - `Tests/` is the current canonical mixed-language test directory.
+- Changes to `main` flow through pull requests with strict required checks and linear squash history. Tags matching `v*` cannot be updated or deleted.
 
 Evidence: `AGENTS.md`, `README.md`, `pytest.ini`.
 
