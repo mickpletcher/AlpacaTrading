@@ -18,6 +18,7 @@
 
 from flask import Flask, Response, jsonify, request, send_from_directory
 import argparse
+import math
 import os
 import sqlite3
 import io
@@ -95,7 +96,7 @@ def validate_trade_payload(data):
         raise ValueError("direction must be LONG or SHORT")
     entry = float(data["entry"])
     qty = int(data["qty"])
-    if entry <= 0 or qty <= 0:
+    if not math.isfinite(entry) or entry <= 0 or qty <= 0:
         raise ValueError("entry and qty must be greater than zero")
     return ticker, direction, entry, qty
 
@@ -122,11 +123,15 @@ def add_trade():
         exit_price = float(data["exit"]) if data.get("exit") else None
         stop_loss = float(data["stop_loss"]) if data.get("stop_loss") else None
         target = float(data["target"]) if data.get("target") else None
-    except (TypeError, ValueError) as exc:
-        return jsonify({"error": str(exc)}), 400
-
-    pnl    = calc_pnl(direction, entry, exit_price, qty)
-    result = calc_result(pnl)
+        optional_prices = (exit_price, stop_loss, target)
+        if any(value is not None and not math.isfinite(value) for value in optional_prices):
+            raise ValueError("optional prices must be finite")
+        pnl = calc_pnl(direction, entry, exit_price, qty)
+        if pnl is not None and not math.isfinite(pnl):
+            raise ValueError("pnl must be finite")
+        result = calc_result(pnl)
+    except (OverflowError, TypeError, ValueError):
+        return jsonify({"error": "Invalid trade payload."}), 400
 
     conn = get_db()
     conn.execute("""
@@ -164,10 +169,10 @@ def update_trade(trade_id):
     data = request.get_json(silent=True)
     try:
         exit_price = float(data["exit"])
-        if exit_price <= 0:
+        if not math.isfinite(exit_price) or exit_price <= 0:
             raise ValueError("exit must be greater than zero")
-    except (KeyError, TypeError, ValueError) as exc:
-        return jsonify({"error": str(exc)}), 400
+    except (KeyError, OverflowError, TypeError, ValueError):
+        return jsonify({"error": "Invalid exit payload."}), 400
 
     conn  = get_db()
     trade = conn.execute("SELECT * FROM trades WHERE id=?", (trade_id,)).fetchone()
@@ -175,8 +180,14 @@ def update_trade(trade_id):
         conn.close()
         return jsonify({"error": "Not found"}), 404
 
-    pnl    = calc_pnl(trade["direction"], trade["entry"], exit_price, trade["qty"])
-    result = calc_result(pnl)
+    try:
+        pnl = calc_pnl(trade["direction"], trade["entry"], exit_price, trade["qty"])
+        if pnl is not None and not math.isfinite(pnl):
+            raise ValueError("pnl must be finite")
+        result = calc_result(pnl)
+    except (OverflowError, TypeError, ValueError):
+        conn.close()
+        return jsonify({"error": "Invalid exit payload."}), 400
 
     conn.execute("""
         UPDATE trades SET exit=?, pnl=?, result=?, mistake=?, lesson=?, notes=?

@@ -31,15 +31,15 @@ These default Python checks do not submit orders.
 
 - Python matching the supported CI version when release confidence is required. CI currently uses Python 3.13.
 - PowerShell 7.
-- Pester 5.5 or newer.
-- PSScriptAnalyzer.
+- Pester 5.7.1.
+- PSScriptAnalyzer 1.24.0.
 - No live Alpaca credentials in the default validation environment.
 
 Install the PowerShell validation modules once for the current user if they are not already available:
 
 ```powershell
-Install-Module Pester -MinimumVersion 5.5.0 -Scope CurrentUser -Force
-Install-Module PSScriptAnalyzer -MinimumVersion 1.24.0 -Scope CurrentUser -Force
+Install-Module Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force
+Install-Module PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope CurrentUser -Force
 ```
 
 Create a clean virtual environment before dependency or release validation:
@@ -115,7 +115,7 @@ Risk tests inject Pester's temporary test directory into `Initialize-AlpacaRisk`
 The command is:
 
 ```powershell
-pwsh -NoProfile -Command "$config=New-PesterConfiguration; $config.Run.Path='.\Tests'; $config.Run.Exit=$true; $config.CodeCoverage.Enabled=$true; $config.CodeCoverage.Path=@('.\src\*\*.psm1'); $config.CodeCoverage.OutputFormat='JaCoCo'; $config.CodeCoverage.OutputPath='powershell-coverage.xml'; $config.CodeCoverage.CoveragePercentTarget=40; Invoke-Pester -Configuration $config"
+pwsh -NoProfile -Command "Import-Module Pester -RequiredVersion 5.7.1 -Force; $config=New-PesterConfiguration; $config.Run.Path='.\Tests'; $config.Run.Exit=$true; $config.CodeCoverage.Enabled=$true; $config.CodeCoverage.Path=@('.\src\*\*.psm1'); $config.CodeCoverage.OutputFormat='JaCoCo'; $config.CodeCoverage.OutputPath='powershell-coverage.xml'; $config.CodeCoverage.CoveragePercentTarget=40; Invoke-Pester -Configuration $config"
 ```
 
 For changes to either injection boundary, compare the operational risk-state hash before and after the suite and inspect the test implementation for direct network calls.

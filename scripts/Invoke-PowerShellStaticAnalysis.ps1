@@ -3,15 +3,21 @@ param()
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot -Parent
+$requiredVersion = [version]'1.24.0'
 $localManifest = Get-ChildItem -LiteralPath (Join-Path $repoRoot '.tools\PSScriptAnalyzer') -Filter 'PSScriptAnalyzer.psd1' -File -Recurse -ErrorAction SilentlyContinue |
-    Sort-Object { [version]$_.Directory.Name } -Descending |
+    Where-Object { [version]$_.Directory.Name -eq $requiredVersion } |
     Select-Object -First 1
 
-if ($localManifest -and [version]$localManifest.Directory.Name -ge [version]'1.24.0') {
+if ($localManifest) {
     Import-Module $localManifest.FullName -Force
 }
 else {
-    Import-Module PSScriptAnalyzer -MinimumVersion 1.24.0 -Force
+    Import-Module PSScriptAnalyzer -RequiredVersion $requiredVersion -Force
+}
+
+$loadedAnalyzer = Get-Module PSScriptAnalyzer
+if (-not $loadedAnalyzer -or $loadedAnalyzer.Version -ne $requiredVersion) {
+    throw "PSScriptAnalyzer $requiredVersion is required."
 }
 
 Push-Location $repoRoot

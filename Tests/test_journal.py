@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 JOURNAL_DIR = ROOT / "Journal"
 if str(JOURNAL_DIR) not in sys.path:
@@ -64,3 +66,106 @@ def test_journal_rejects_invalid_writes_and_nonloopback_clients(monkeypatch, tmp
     assert client.post("/api/trades", json={"ticker": "AAPL"}).status_code == 400
     response = client.get("/api/trades", environ_base={"REMOTE_ADDR": "10.0.0.5"})
     assert response.status_code == 403
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        ["DO-NOT-REFLECT"],
+        {
+            "ticker": "AAPL",
+            "direction": "LONG",
+            "entry": "DO-NOT-REFLECT",
+            "qty": 1,
+        },
+        {
+            "ticker": "AAPL",
+            "direction": "LONG",
+            "entry": 100,
+            "qty": 1,
+            "stop_loss": "DO-NOT-REFLECT",
+        },
+        {
+            "ticker": "AAPL",
+            "direction": "LONG",
+            "entry": float("nan"),
+            "qty": 1,
+        },
+        {
+            "ticker": "AAPL",
+            "direction": "LONG",
+            "entry": 100,
+            "qty": float("inf"),
+        },
+        {
+            "ticker": "AAPL",
+            "direction": "LONG",
+            "entry": 100,
+            "qty": 1,
+            "target": float("inf"),
+        },
+    ],
+)
+def test_add_trade_does_not_return_conversion_errors(monkeypatch, tmp_path, payload):
+    client = configure_temp_store(monkeypatch, tmp_path)
+
+    response = client.post("/api/trades", json=payload)
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Invalid trade payload."}
+    assert b"DO-NOT-REFLECT" not in response.data
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [{}, None, {"exit": "DO-NOT-REFLECT"}, {"exit": float("nan")}, {"exit": float("inf")}],
+)
+def test_update_trade_does_not_return_conversion_errors(monkeypatch, tmp_path, payload):
+    client = configure_temp_store(monkeypatch, tmp_path)
+    assert add_trade(client, "2026-09-28", "AAPL", 100, None).status_code == 201
+    trade_id = client.get("/api/trades").get_json()[0]["id"]
+
+    response = client.put(f"/api/trades/{trade_id}", json=payload)
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Invalid exit payload."}
+    assert b"DO-NOT-REFLECT" not in response.data
+
+
+def test_valid_trade_create_and_update_remain_available(monkeypatch, tmp_path):
+    client = configure_temp_store(monkeypatch, tmp_path)
+    create_response = add_trade(client, "2026-09-28", "AAPL", 100, None)
+    trade_id = client.get("/api/trades").get_json()[0]["id"]
+
+    update_response = client.put(
+        f"/api/trades/{trade_id}",
+        json={"exit": 110, "notes": "closed normally"},
+    )
+
+    assert create_response.status_code == 201
+    assert update_response.status_code == 200
+    assert update_response.get_json() == {"status": "ok", "pnl": 10.0, "result": "WIN"}
+
+
+def test_add_trade_rejects_nonfinite_computed_pnl(monkeypatch, tmp_path):
+    client = configure_temp_store(monkeypatch, tmp_path)
+
+    response = add_trade(client, "2026-09-28", "AAPL", 1e308, 1.7e308, qty=100)
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Invalid trade payload."}
+    assert client.get("/api/trades").get_json() == []
+
+
+def test_update_trade_rejects_nonfinite_computed_pnl(monkeypatch, tmp_path):
+    client = configure_temp_store(monkeypatch, tmp_path)
+    assert add_trade(client, "2026-09-28", "AAPL", 1e308, None, qty=100).status_code == 201
+    trade_id = client.get("/api/trades").get_json()[0]["id"]
+
+    response = client.put(f"/api/trades/{trade_id}", json={"exit": 1.7e308})
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Invalid exit payload."}
+    trade = client.get("/api/trades").get_json()[0]
+    assert trade["exit"] is None
+    assert trade["pnl"] is None
