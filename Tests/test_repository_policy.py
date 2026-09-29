@@ -14,7 +14,7 @@ def test_ci_installs_hash_checked_lock_and_enforces_coverage() -> None:
     assert "CoveragePercentTarget = 40" in workflow
     assert "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" in workflow
     assert "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97" in workflow
-    assert "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0" in workflow
+    assert "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" in workflow
     assert "PSScriptAnalyzer -RequiredVersion 1.24.0" in workflow
     assert "Pester -RequiredVersion 5.7.1" in workflow
 
