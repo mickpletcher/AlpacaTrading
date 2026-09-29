@@ -18,6 +18,12 @@ def test_ci_installs_hash_checked_lock_and_enforces_coverage() -> None:
     assert "PSScriptAnalyzer -RequiredVersion 1.24.0" in workflow
     assert "Pester -RequiredVersion 5.7.1" in workflow
 
+    analyzer_script = (ROOT / "scripts" / "Invoke-PowerShellStaticAnalysis.ps1").read_text(
+        encoding="utf-8"
+    )
+    assert "Import-Module PSScriptAnalyzer -RequiredVersion $requiredVersion" in analyzer_script
+    assert "-MinimumVersion" not in analyzer_script
+
 
 def test_release_publication_is_explicit_and_validated() -> None:
     script = (ROOT / "scripts" / "New-Release.ps1").read_text(encoding="utf-8")

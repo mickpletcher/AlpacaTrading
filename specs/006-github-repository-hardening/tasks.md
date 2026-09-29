@@ -10,7 +10,8 @@
 - [x] Run focused and full local validation.
 - [x] Publish the implementation pull request.
 - [x] Apply and verify repository settings and rulesets.
-- [ ] Require hosted CI and CodeQL and squash merge.
+- [x] Require hosted CI and CodeQL.
+- [ ] Squash merge the implementation pull request.
 - [ ] Verify final main, alerts, branch state, and repository settings.
 
 <!-- markdownlint-enable MD013 MD024 MD060 -->

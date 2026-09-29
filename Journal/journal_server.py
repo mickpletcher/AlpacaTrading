@@ -126,11 +126,12 @@ def add_trade():
         optional_prices = (exit_price, stop_loss, target)
         if any(value is not None and not math.isfinite(value) for value in optional_prices):
             raise ValueError("optional prices must be finite")
+        pnl = calc_pnl(direction, entry, exit_price, qty)
+        if pnl is not None and not math.isfinite(pnl):
+            raise ValueError("pnl must be finite")
+        result = calc_result(pnl)
     except (OverflowError, TypeError, ValueError):
         return jsonify({"error": "Invalid trade payload."}), 400
-
-    pnl    = calc_pnl(direction, entry, exit_price, qty)
-    result = calc_result(pnl)
 
     conn = get_db()
     conn.execute("""
@@ -179,8 +180,14 @@ def update_trade(trade_id):
         conn.close()
         return jsonify({"error": "Not found"}), 404
 
-    pnl    = calc_pnl(trade["direction"], trade["entry"], exit_price, trade["qty"])
-    result = calc_result(pnl)
+    try:
+        pnl = calc_pnl(trade["direction"], trade["entry"], exit_price, trade["qty"])
+        if pnl is not None and not math.isfinite(pnl):
+            raise ValueError("pnl must be finite")
+        result = calc_result(pnl)
+    except (OverflowError, TypeError, ValueError):
+        conn.close()
+        return jsonify({"error": "Invalid exit payload."}), 400
 
     conn.execute("""
         UPDATE trades SET exit=?, pnl=?, result=?, mistake=?, lesson=?, notes=?

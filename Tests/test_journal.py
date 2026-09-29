@@ -145,3 +145,27 @@ def test_valid_trade_create_and_update_remain_available(monkeypatch, tmp_path):
     assert create_response.status_code == 201
     assert update_response.status_code == 200
     assert update_response.get_json() == {"status": "ok", "pnl": 10.0, "result": "WIN"}
+
+
+def test_add_trade_rejects_nonfinite_computed_pnl(monkeypatch, tmp_path):
+    client = configure_temp_store(monkeypatch, tmp_path)
+
+    response = add_trade(client, "2026-09-28", "AAPL", 1e308, 1.7e308, qty=100)
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Invalid trade payload."}
+    assert client.get("/api/trades").get_json() == []
+
+
+def test_update_trade_rejects_nonfinite_computed_pnl(monkeypatch, tmp_path):
+    client = configure_temp_store(monkeypatch, tmp_path)
+    assert add_trade(client, "2026-09-28", "AAPL", 1e308, None, qty=100).status_code == 201
+    trade_id = client.get("/api/trades").get_json()[0]["id"]
+
+    response = client.put(f"/api/trades/{trade_id}", json={"exit": 1.7e308})
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Invalid exit payload."}
+    trade = client.get("/api/trades").get_json()[0]
+    assert trade["exit"] is None
+    assert trade["pnl"] is None
