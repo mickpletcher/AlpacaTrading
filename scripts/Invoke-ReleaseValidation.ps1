@@ -60,6 +60,10 @@ try {
     }
     Write-Output 'PowerShell manifests and imports passed.'
 
+    pwsh -NoProfile -File .\scripts\Invoke-PowerShellStaticAnalysis.ps1
+    if ($LASTEXITCODE -ne 0) { throw 'PowerShell static analysis failed.' }
+    Write-Output 'PowerShell static analysis passed.'
+
     Import-ValidationModule -Name Pester -MinimumVersion 5.5.0
     Write-Output 'Pester loaded.'
     $configuration = New-PesterConfiguration
@@ -85,8 +89,6 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Whitespace validation failed.' }
     Write-Output 'Whitespace validation passed.'
 
-    pwsh -NoProfile -File .\scripts\Invoke-PowerShellStaticAnalysis.ps1
-    if ($LASTEXITCODE -ne 0) { throw 'PowerShell static analysis failed.' }
     Write-Output 'Release validation passed.'
 }
 finally {
