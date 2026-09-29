@@ -55,22 +55,9 @@ The API stores several text fields without length or content validation. The bro
 
 **Required fix:** Render user-controlled values with `textContent`, add server-side limits, add regression tests, and set a restrictive Content Security Policy.
 
-## BUG-010: Current CodeQL findings are unresolved
-
-**Status:** Open
-
-**Severity:** Medium
-**Area:** GitHub Actions and journal API responses
-
-CodeQL currently reports five open alerts. Three report missing explicit workflow permissions. Two report raw exception text returned by journal validation responses.
-
-**Impact:** Workflow token permissions are implicit, and API responses can expose implementation details that callers do not need.
-
-**Evidence:** `.github/workflows/ci.yml` and `Journal/journal_server.py` lines 119 through 125 and 163 through 169.
-
-**Required fix:** Declare minimum workflow permissions and replace raw exception output with stable client-facing validation messages.
-
 BUG-001 through BUG-006 were resolved by `specs/003-trading-safety-remediation/`. Their permanent history and validation summary are recorded under Upgrade 004 in `upgrades/README.md`.
+
+BUG-010 was resolved by `specs/006-github-repository-hardening/`. Its permanent history and validation summary are recorded under Upgrade 006.
 
 New defects must receive the next permanent `BUG-` identifier. Do not reuse resolved identifiers.
 

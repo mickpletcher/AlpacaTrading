@@ -175,6 +175,8 @@ Do not copy `Journal/trades.db`, replay databases, or risk-state files between c
 
 ## Maintenance
 
+Report suspected vulnerabilities through GitHub private vulnerability reporting. Do not open a public issue with exploit details, credentials, account identifiers, or private trading data. Scope, response expectations, and current limitations are defined in `SECURITY.md`.
+
 - Run `Tests/README.md` validation before restarting changed automation.
 - Run `scripts/docs-check.ps1 -FailOnGap` during documentation changes.
 - Review `ISSUES.md`, `TECH-DEBT.md`, and `FUTURE-UPGRADES.md` before each release snapshot.
