@@ -20,7 +20,8 @@ def test_release_publication_is_explicit_and_validated() -> None:
 
     assert "[switch]$Publish" in script
     assert "Invoke-ReleaseValidation.ps1" in script
-    assert "git tag -a" in script
-    assert "git push origin" in script
-    assert "gh release create" in script
+    assert "@('tag', '-a', $tag" in script
+    assert "@('push', 'origin', 'main')" in script
+    assert "@('push', 'origin', $tag)" in script
+    assert "@('release', 'create', $tag" in script
     assert "SupportsShouldProcess" in script
