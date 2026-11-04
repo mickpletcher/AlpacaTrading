@@ -1,0 +1,38 @@
+name: Accessibility barrier
+description: Report a barrier or request an accessible alternative.
+title: '[Accessibility]: '
+body:
+- type: markdown
+  attributes:
+    value: This issue is public. Use synthetic or redacted examples. Do not include credentials, account identifiers, private trading records, or personal data. For vulnerabilities, use [SECURITY.md](https://github.com/mickpletcher/AlpacaTrading/blob/main/SECURITY.md) instead. Please follow our [code of conduct](https://github.com/mickpletcher/AlpacaTrading/blob/main/CODE_OF_CONDUCT.md).
+- type: markdown
+  attributes:
+    value: A text-only report is enough. Screenshots and diagnoses are not required. Do not share medical information. If this form is a barrier, use a [blank issue](https://github.com/mickpletcher/AlpacaTrading/issues/new). See [ACCESSIBILITY.md](https://github.com/mickpletcher/AlpacaTrading/blob/main/ACCESSIBILITY.md).
+- type: input
+  id: location
+  attributes:
+    label: Affected file, page, or output
+    description: A repository path or description is enough.
+  validations:
+    required: true
+- type: textarea
+  id: barrier
+  attributes:
+    label: Barrier and intended task
+    description: Describe what prevented you from completing the task.
+  validations:
+    required: true
+- type: textarea
+  id: alternative
+  attributes:
+    label: Expected experience or helpful alternative
+    description: For example, a text equivalent, keyboard support, or clearer instructions.
+  validations:
+    required: false
+- type: textarea
+  id: environment
+  attributes:
+    label: Environment (optional)
+    description: Browser, operating system, assistive technology, or zoom level, only if useful and comfortable to share. No diagnosis is needed.
+  validations:
+    required: false

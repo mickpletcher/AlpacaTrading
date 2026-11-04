@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible problem with synthetic data.
+title: '[Bug]: '
+body:
+- type: markdown
+  attributes:
+    value: This issue is public. Use synthetic or redacted examples. Do not include credentials, account identifiers, private trading records, or personal data. For vulnerabilities, use [SECURITY.md](https://github.com/mickpletcher/AlpacaTrading/blob/main/SECURITY.md) instead. Please follow our [code of conduct](https://github.com/mickpletcher/AlpacaTrading/blob/main/CODE_OF_CONDUCT.md).
+- type: textarea
+  id: component
+  attributes:
+    label: Affected component and version
+    description: Include a file or script name and commit or release when known.
+  validations:
+    required: true
+- type: textarea
+  id: steps
+  attributes:
+    label: Steps to reproduce
+    description: Use fake clients or synthetic records. Do not place an order just to reproduce a bug.
+  validations:
+    required: true
+- type: textarea
+  id: expected
+  attributes:
+    label: Expected behavior
+    description: ''
+  validations:
+    required: true
+- type: textarea
+  id: actual
+  attributes:
+    label: Actual behavior
+    description: Include only redacted error messages or logs.
+  validations:
+    required: true
+- type: textarea
+  id: environment
+  attributes:
+    label: Environment
+    description: Operating system and relevant Python, PowerShell, browser, or dependency versions.
+  validations:
+    required: false

@@ -40,6 +40,39 @@ jobs:
         run: |
           python -m pytest .\Tests -q --cov --cov-config=.coveragerc --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=50
 
+      - name: Set up Node for accessibility checks
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Tests/browser/package-lock.json
+
+      - name: Install accessibility test tools
+        shell: pwsh
+        run: |
+          npm ci --prefix Tests/browser --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Set-Location Tests/browser
+          npx --no-install playwright install chromium
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Check browser accessibility with synthetic data
+        shell: pwsh
+        run: |
+          python Tests/browser/generate_reports.py --output Tests/browser/.reports
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm --prefix Tests/browser test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload synthetic accessibility screenshots
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: accessibility-screenshots
+          path: Tests/browser/.reports/*.png
+          include-hidden-files: true
+          if-no-files-found: ignore
+
       - name: Upload Python coverage
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

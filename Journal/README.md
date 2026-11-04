@@ -7,7 +7,7 @@ This folder helps you review what happened after a trade or a strategy run.
 It includes a browser based journal, CSV exports, logs, and an HTML summary report.
 
 > [!CAUTION]
-> BUG-009 is open. Keep the journal on `127.0.0.1` and do not import CSV files from an untrusted source. Stored text is not yet rendered safely in every table.
+> BUG-009 is open. Keep the journal on `127.0.0.1` and do not import CSV files from an untrusted source. Input limits and browser defense-in-depth are not yet fully remediated or security-validated.
 
 ## Related Repo Guides
 
@@ -207,6 +207,18 @@ Typical flow:
 3. copy the generated prompt
 4. paste it into your external AI tool
 5. review the suggested coaching ideas critically, not blindly
+
+## Accessibility and Keyboard Use
+
+- Use the **Skip to journal** link to move past the header.
+- In the section tabs, use Left/Right Arrow, Home, and End to change sections. Use Tab to move into the selected panel and its controls.
+- Every form field has a visible label. Required fields are marked, and browser validation identifies missing values.
+- Save and error feedback remains on the page and is announced through a polite status region. If a save cannot be confirmed, check Trade History before retrying so you do not create a duplicate.
+- Trade tables are named, keyboard-focusable scroll regions. Delete buttons identify the trade and ask for confirmation. Cancelling preserves the record; successful deletion moves focus to the history panel.
+- The layout supports narrow screens, text is not conveyed through color alone, and reduced-motion preferences disable transitions. The continuous decorative scanline has been removed.
+- Generated coaching prompts are keyboard-focusable and selectable. If clipboard access fails, copy the text manually. Review private information before sharing externally.
+
+See [accessibility guidance](../ACCESSIBILITY.md) for reporting barriers and current verification limits. These improvements are not a claim of complete WCAG conformance.
 
 ## Common Mistakes
 

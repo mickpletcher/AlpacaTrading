@@ -1,0 +1,18 @@
+{
+  "name": "alpacatrading-accessibility-checks",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Synthetic, credential-free accessibility regression checks",
+  "scripts": {
+    "test": "node journal_accessibility_behavior.cjs && node journal_accessibility_smoke.cjs && node report_accessibility_smoke.cjs",
+    "test:dom": "node journal_accessibility_behavior.cjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "jsdom": "26.1.0",
+    "playwright": "1.64.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -52,6 +52,8 @@ This validates a fixed local dataset and calculates repeatable results. It does 
 
 Open `http://127.0.0.1:5000`. Keep the service local. While BUG-009 is open, do not import CSV data from an untrusted source.
 
+The journal tabs support arrow keys, Home, and End. Status and error messages remain visible. If a save or deletion cannot be confirmed, check Trade History before retrying; a lost response does not prove the operation failed. See `ACCESSIBILITY.md` for known assistive-technology limits and reporting routes.
+
 ## Paper-Order Tools
 
 These tools can change the Alpaca paper account.

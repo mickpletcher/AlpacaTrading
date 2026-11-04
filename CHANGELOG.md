@@ -2,6 +2,10 @@
 
 # Changelog
 
+## Unreleased community and accessibility work
+
+See [fragment 007](changelog.d/007-community-accessibility.md) for community intake, journal accessibility, report semantics, and regression-check changes. No release or trading-boundary change is made by that fragment.
+
 This repository uses date-stamped change sections. In-flight changes are recorded under `changelog.d/` and consolidated here during release or monthly maintenance.
 
 Historical repository upgrades before adoption of this changelog remain in `upgrades/README.md`.
@@ -12,7 +16,7 @@ Historical repository upgrades before adoption of this changelog remain in `upgr
 
 - Added repository-local authority mapping, routed agent rules, evidence-based assessment, architecture, validation, operations, defect, debt, future-work, decision, and documentation compliance authorities.
 
-# Novice Documentation Refresh
+### Novice Documentation Refresh
 
 - Added a safe beginner path and plain-language glossary.
 - Corrected stale assessment, architecture, storage, and live-trading claims.
@@ -23,7 +27,7 @@ Historical repository upgrades before adoption of this changelog remain in `upgr
 
 - Added deterministic cross-platform backtesting, local operational health, coverage gates, a hash-checked dependency lock, sanitized product screenshots, and an explicit release process with isolated validation stages.
 
-# Trading safety remediation
+### Trading safety remediation
 
 - Enforced one shared paper-only Python execution boundary.
 - Hardened the BTC webhook and corrected crypto order time in force.

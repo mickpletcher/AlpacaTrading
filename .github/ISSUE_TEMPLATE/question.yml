@@ -1,0 +1,28 @@
+name: Usage question
+description: Ask about safe setup or repository behavior.
+title: '[Question]: '
+body:
+- type: markdown
+  attributes:
+    value: This issue is public. Use synthetic or redacted examples. Do not include credentials, account identifiers, private trading records, or personal data. For vulnerabilities, use [SECURITY.md](https://github.com/mickpletcher/AlpacaTrading/blob/main/SECURITY.md) instead. Please follow our [code of conduct](https://github.com/mickpletcher/AlpacaTrading/blob/main/CODE_OF_CONDUCT.md).
+- type: textarea
+  id: task
+  attributes:
+    label: What are you trying to do?
+    description: Describe the component and intended result.
+  validations:
+    required: true
+- type: textarea
+  id: question
+  attributes:
+    label: Question
+    description: Explain what you have tried and which guide you followed. Never paste .env contents.
+  validations:
+    required: true
+- type: textarea
+  id: environment
+  attributes:
+    label: Environment
+    description: Relevant operating system and tool versions, if useful.
+  validations:
+    required: false

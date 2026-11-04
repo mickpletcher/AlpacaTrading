@@ -7,15 +7,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
+    color-scheme: dark;
     --bg:       #080c0f;
     --panel:    #0d1318;
-    --border:   #1a2530;
+    --border:   #647887;
     --accent:   #00e5ff;
     --green:    #00ff88;
     --red:      #ff3355;
     --yellow:   #ffcc00;
     --text:     #c8d8e8;
-    --muted:    #4a6070;
+    --muted:    #9aafbf;
     --font-mono: 'Share Tech Mono', monospace;
     --font-head: 'Bebas Neue', cursive;
     --font-body: 'DM Sans', sans-serif;
@@ -34,20 +35,13 @@
       repeating-linear-gradient(90deg, transparent, transparent 39px, #0f1820 39px, #0f1820 40px);
   }
 
-  .scanline {
-    position: fixed; top: 0; left: 0; right: 0; height: 2px;
-    background: rgba(0,229,255,0.15);
-    animation: scan 4s linear infinite;
-    pointer-events: none; z-index: 999;
-  }
-  @keyframes scan { from { top: 0; } to { top: 100vh; } }
 
   header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 16px 32px;
     border-bottom: 1px solid var(--border);
     background: rgba(13,19,24,0.95);
-    position: sticky; top: 0; z-index: 100;
+    position: relative; z-index: 100;
     backdrop-filter: blur(10px);
   }
 
@@ -69,7 +63,7 @@
 
   .stat-pill .label {
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 12px;
     color: var(--muted);
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -128,7 +122,7 @@
 
   .form-group label {
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--muted);
@@ -209,7 +203,7 @@
     text-align: left;
     padding: 10px 12px;
     color: var(--muted);
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--border);
@@ -263,7 +257,7 @@
 
   .stat-card .sc-label {
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--muted);
@@ -325,13 +319,41 @@
     z-index: 999;
   }
   #toast.show { opacity: 1; }
+
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .skip-link { position:absolute; left:16px; top:-100px; padding:12px; background:var(--panel); color:var(--accent); z-index:1000; }
+  .skip-link:focus { top:8px; }
+  :focus-visible { outline:3px solid var(--accent) !important; outline-offset:3px; }
+  .form-help { margin-bottom:16px; line-height:1.6; }
+  button, input, select { min-height:44px; }
+  button:disabled { cursor:wait; }
+  .tabs, .toolbar, header, .header-stats { flex-wrap:wrap; gap:12px; }
+  .form-group, .panel, .table-wrap, .stat-card { min-width:0; }
+  .logo { max-width:100%; overflow-wrap:anywhere; }
+  .table-wrap { max-width:100%; }
+  .prompt-box { overflow-wrap:anywhere; }
+  #toast { position:static; margin:16px auto; max-width:1336px; opacity:1; min-height:44px; border:0; overflow-wrap:anywhere; }
+  #toast:empty { padding:0; }
+  [hidden] { display:none !important; }
+  @media (max-width:600px) {
+    header, .container { padding:16px; }
+    .logo { font-size:24px; letter-spacing:2px; }
+    .header-stats { width:100%; justify-content:space-between; }
+    .stat-pill { align-items:flex-start; }
+    .tabs .tab { padding:10px; flex:1 1 40%; letter-spacing:1px; }
+    .form-grid, .stats-grid { grid-template-columns:minmax(0,1fr); }
+    #toast { margin:16px; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    *, *::before, *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+  }
 </style>
 </head>
 <body>
-<div class="scanline"></div>
+<a class="skip-link" href="#main-content">Skip to journal</a>
 
 <header>
-  <div class="logo">TRADE//JOURNAL</div>
+  <h1 class="logo">TRADE//JOURNAL</h1>
   <div class="header-stats" id="header-stats">
     <div class="stat-pill"><span class="label">Total P&L</span><span class="value neutral" id="hdr-pnl">—</span></div>
     <div class="stat-pill"><span class="label">Win Rate</span><span class="value neutral" id="hdr-wr">—</span></div>
@@ -340,56 +362,59 @@
   </div>
 </header>
 
-<div class="container">
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('log')">LOG TRADE</button>
-    <button class="tab" onclick="switchTab('trades')">TRADE HISTORY</button>
-    <button class="tab" onclick="switchTab('stats')">ANALYTICS</button>
-    <button class="tab" onclick="switchTab('ai')">AI ANALYSIS</button>
+<main class="container" id="main-content" tabindex="-1">
+  <div class="tabs" role="tablist" aria-label="Journal sections">
+    <button class="tab active" id="tab-log" role="tab" aria-controls="panel-log" aria-selected="true" tabindex="0" onclick="switchTab('log')">LOG TRADE</button>
+    <button class="tab" id="tab-trades" role="tab" aria-controls="panel-trades" aria-selected="false" tabindex="-1" onclick="switchTab('trades')">TRADE HISTORY</button>
+    <button class="tab" id="tab-stats" role="tab" aria-controls="panel-stats" aria-selected="false" tabindex="-1" onclick="switchTab('stats')">ANALYTICS</button>
+    <button class="tab" id="tab-ai" role="tab" aria-controls="panel-ai" aria-selected="false" tabindex="-1" onclick="switchTab('ai')">AI ANALYSIS</button>
   </div>
 
+  <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <!-- LOG TRADE -->
-  <div class="panel active" id="panel-log">
-    <div class="section-title">LOG NEW TRADE</div>
+  <div class="panel active" id="panel-log" role="tabpanel" aria-labelledby="tab-log" tabindex="0">
+    <h2 class="section-title">LOG NEW TRADE</h2>
     <form id="trade-form">
+      <p class="form-help">Required fields are marked (required). Saving a journal entry does not place an order.</p>
       <div class="form-grid">
         <div class="form-group">
-          <label>Date</label>
+          <label for="f-date">Date (required)</label>
           <input type="date" id="f-date" required>
         </div>
         <div class="form-group">
-          <label>Ticker</label>
+          <label for="f-ticker">Ticker (required)</label>
           <input type="text" id="f-ticker" placeholder="SPY" required>
         </div>
         <div class="form-group">
-          <label>Direction</label>
+          <label for="f-direction">Direction</label>
           <select id="f-direction">
             <option>LONG</option>
             <option>SHORT</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Qty (shares)</label>
+          <label for="f-qty">Qty (shares) (required)</label>
           <input type="number" id="f-qty" min="1" value="1" required>
         </div>
         <div class="form-group">
-          <label>Entry Price</label>
-          <input type="number" id="f-entry" step="0.01" placeholder="0.00" required>
+          <label for="f-entry">Entry Price (required)</label>
+          <input type="number" id="f-entry" min="0.01" step="0.01" placeholder="0.00" required>
         </div>
         <div class="form-group">
-          <label>Exit Price (blank = open)</label>
+          <label for="f-exit">Exit Price (blank = open)</label>
           <input type="number" id="f-exit" step="0.01" placeholder="0.00">
         </div>
         <div class="form-group">
-          <label>Stop Loss</label>
+          <label for="f-stop">Stop Loss</label>
           <input type="number" id="f-stop" step="0.01" placeholder="0.00">
         </div>
         <div class="form-group">
-          <label>Target</label>
+          <label for="f-target">Target</label>
           <input type="number" id="f-target" step="0.01" placeholder="0.00">
         </div>
         <div class="form-group">
-          <label>Setup</label>
+          <label for="f-setup">Setup</label>
           <select id="f-setup">
             <option value="">— Select —</option>
             <option>EMA Crossover</option>
@@ -402,7 +427,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Timeframe</label>
+          <label for="f-timeframe">Timeframe</label>
           <select id="f-timeframe">
             <option>1m</option>
             <option>5m</option>
@@ -413,7 +438,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Emotional State</label>
+          <label for="f-emotion">Emotional State</label>
           <select id="f-emotion">
             <option value="">— Select —</option>
             <option>Calm / Focused</option>
@@ -426,15 +451,15 @@
           </select>
         </div>
         <div class="form-group form-full">
-          <label>Mistake Made (if any)</label>
+          <label for="f-mistake">Mistake Made (if any)</label>
           <input type="text" id="f-mistake" placeholder="e.g. Chased entry, moved stop, sized too large...">
         </div>
         <div class="form-group form-full">
-          <label>Lesson Learned</label>
+          <label for="f-lesson">Lesson Learned</label>
           <input type="text" id="f-lesson" placeholder="e.g. Wait for pullback to EMA before entry...">
         </div>
         <div class="form-group form-full">
-          <label>Notes</label>
+          <label for="f-notes">Notes</label>
           <textarea id="f-notes" rows="2" placeholder="Market context, catalyst, chart notes..."></textarea>
         </div>
       </div>
@@ -443,18 +468,19 @@
   </div>
 
   <!-- TRADE HISTORY -->
-  <div class="panel" id="panel-trades">
+  <div class="panel" id="panel-trades" role="tabpanel" aria-labelledby="tab-trades" tabindex="0" hidden>
     <div class="toolbar">
-      <div class="section-title">TRADE HISTORY</div>
+      <h2 class="section-title">TRADE HISTORY</h2>
       <button class="btn btn-export" onclick="exportCSV()">↓ EXPORT CSV</button>
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap" role="region" aria-label="Trade history table" tabindex="0">
       <table>
+        <caption class="sr-only">Recorded trades and available actions</caption>
         <thead>
           <tr>
-            <th>Date</th><th>Ticker</th><th>Dir</th><th>Qty</th>
-            <th>Entry</th><th>Exit</th><th>P&L</th><th>Result</th>
-            <th>Setup</th><th>Emotion</th><th>Mistake</th><th></th>
+            <th scope="col">Date</th><th scope="col">Ticker</th><th scope="col">Dir</th><th scope="col">Qty</th>
+            <th scope="col">Entry</th><th scope="col">Exit</th><th scope="col">P&L</th><th scope="col">Result</th>
+            <th scope="col">Setup</th><th scope="col">Emotion</th><th scope="col">Mistake</th><th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody id="trades-body"></tbody>
@@ -463,50 +489,75 @@
   </div>
 
   <!-- ANALYTICS -->
-  <div class="panel" id="panel-stats">
-    <div class="section-title">ANALYTICS</div>
+  <div class="panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" tabindex="0" hidden>
+    <h2 class="section-title">ANALYTICS</h2>
     <div class="stats-grid" id="stats-grid"></div>
     <div id="setup-table"></div>
   </div>
 
   <!-- AI ANALYSIS -->
-  <div class="panel" id="panel-ai">
-    <div class="section-title">AI ANALYSIS PROMPT</div>
+  <div class="panel" id="panel-ai" role="tabpanel" aria-labelledby="tab-ai" tabindex="0" hidden>
+    <h2 class="section-title">AI ANALYSIS PROMPT</h2>
     <p style="color:var(--muted); font-family:var(--font-mono); font-size:12px; margin-bottom:16px;">
-      Copy the generated prompt below and paste it into Claude for a personalized coaching analysis of your trades.
+      Review the generated prompt before sharing it with an external AI service. It may contain private trading information. Copying does not send it automatically.
     </p>
     <button class="btn btn-primary" onclick="loadAIPrompt()">▶ GENERATE PROMPT</button>
-    <pre class="prompt-box" id="ai-prompt">Click "Generate Prompt" to create your AI coaching analysis request based on your trade history.</pre>
+    <pre class="prompt-box" id="ai-prompt" tabindex="0" role="region" aria-label="Generated coaching prompt">Click "Generate Prompt" to create your AI coaching analysis request based on your trade history.</pre>
     <button class="btn btn-export" style="margin-top:12px;" onclick="copyPrompt()">⎘ COPY TO CLIPBOARD</button>
   </div>
-</div>
+</main>
 
-<div id="toast">Trade logged successfully.</div>
 
 <script>
-const API = "";
+const pending = new Set();
+let tradesRequest = 0;
+let statsRequest = 0;
+const escapeText = value => String(value ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function request(url, options) {
+  const response = await fetch(url, options);
+  if (!response.ok) throw new Error("Request failed");
+  return response.json();
+}
 
 // ─── Tab switching ───
 function switchTab(name) {
-  document.querySelectorAll(".tab").forEach((t,i) => {
-    const panels = ["log","trades","stats","ai"];
-    t.classList.toggle("active", panels[i] === name);
+  document.querySelectorAll(".tab").forEach(t => {
+    const selected = t.id === "tab-" + name;
+    t.classList.toggle("active", selected);
+    t.setAttribute("aria-selected", String(selected));
+    t.tabIndex = selected ? 0 : -1;
   });
   document.querySelectorAll(".panel").forEach(p => {
-    p.classList.toggle("active", p.id === "panel-" + name);
+    const selected = p.id === "panel-" + name;
+    p.classList.toggle("active", selected);
+    p.hidden = !selected;
   });
   if (name === "trades") loadTrades();
-  if (name === "stats")  loadStats();
+  if (name === "stats") loadStats();
 }
+document.querySelector('[role="tablist"]').addEventListener("keydown", e => {
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const current = tabs.indexOf(document.activeElement);
+  if (current < 0) return;
+  let next;
+  if (e.key === "ArrowRight") next = (current + 1) % tabs.length;
+  else if (e.key === "ArrowLeft") next = (current + tabs.length - 1) % tabs.length;
+  else if (e.key === "Home") next = 0;
+  else if (e.key === "End") next = tabs.length - 1;
+  else return;
+  e.preventDefault();
+  tabs[next].focus();
+  switchTab(tabs[next].id.slice(4));
+});
 
-// ─── Toast ───
+// Persistent feedback is available visually and to assistive technology.
+let toastTimer;
 function toast(msg, isError=false) {
   const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.style.borderColor = isError ? "var(--red)" : "var(--accent)";
+  clearTimeout(toastTimer);
+  el.textContent = "";
   el.style.color = isError ? "var(--red)" : "var(--accent)";
-  el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 3000);
+  toastTimer = setTimeout(() => { el.textContent = (isError ? "Error: " : "") + msg; }, 50);
 }
 
 // ─── Set today's date ───
@@ -515,6 +566,11 @@ document.getElementById("f-date").value = new Date().toISOString().split("T")[0]
 // ─── Submit trade ───
 document.getElementById("trade-form").addEventListener("submit", async e => {
   e.preventDefault();
+  if (pending.has("save")) return;
+  pending.add("save");
+  const submit = e.target.querySelector('[type="submit"]');
+  submit.disabled = true;
+  e.target.setAttribute("aria-busy", "true");
   const payload = {
     date:      document.getElementById("f-date").value,
     ticker:    document.getElementById("f-ticker").value,
@@ -532,28 +588,31 @@ document.getElementById("trade-form").addEventListener("submit", async e => {
     notes:     document.getElementById("f-notes").value,
   };
 
-  const res = await fetch("/api/trades", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  if (res.ok) {
-    const data = await res.json();
+  try {
+    const data = await request("/api/trades", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+    });
     const pnl = data.pnl !== null ? ` | P&L: $${data.pnl > 0 ? "+" : ""}${data.pnl}` : "";
-    toast(`${data.result}${pnl}`);
+    toast(`Trade saved: ${data.result}${pnl}`);
     e.target.reset();
     document.getElementById("f-date").value = new Date().toISOString().split("T")[0];
+    if (!document.getElementById("panel-log").hidden) document.getElementById("f-ticker").focus();
     loadHeaderStats();
-  } else {
-    toast("Error saving trade.", true);
+  } catch {
+    toast("Could not confirm the save. Your entries are preserved. Check Trade History before retrying to avoid a duplicate.", true);
+  } finally {
+    pending.delete("save");
+    submit.disabled = false;
+    e.target.removeAttribute("aria-busy");
   }
 });
 
 // ─── Load trades table ───
 async function loadTrades() {
-  const res = await fetch("/api/trades");
-  const trades = await res.json();
+  const version = ++tradesRequest;
+  try {
+  const trades = await request("/api/trades");
+  if (version !== tradesRequest) return;
   const tbody = document.getElementById("trades-body");
 
   tbody.innerHTML = trades.map(t => {
@@ -565,38 +624,62 @@ async function loadTrades() {
                 : t.result === "OPEN" ? "badge-open"
                 : "badge-be";
     return `<tr>
-      <td>${t.date}</td>
-      <td><strong>${t.ticker}</strong></td>
-      <td style="color:${t.direction==='LONG'?'var(--green)':'var(--red)'}">${t.direction}</td>
+      <td>${escapeText(t.date)}</td>
+      <td><strong>${escapeText(t.ticker)}</strong></td>
+      <td style="color:${t.direction==='LONG'?'var(--green)':'var(--red)'}">${escapeText(t.direction)}</td>
       <td>${t.qty}</td>
       <td>$${parseFloat(t.entry).toFixed(2)}</td>
       <td>${t.exit ? "$"+parseFloat(t.exit).toFixed(2) : "—"}</td>
       <td>${pnl}</td>
-      <td><span class="badge ${badge}">${t.result}</span></td>
-      <td>${t.setup || "—"}</td>
-      <td style="color:${t.emotion?.includes('FOMO')||t.emotion?.includes('Revenge')?"var(--red)":"inherit"}">${t.emotion || "—"}</td>
-      <td style="color:var(--muted); max-width:160px; overflow:hidden; text-overflow:ellipsis">${t.mistake || "—"}</td>
-      <td><button class="btn btn-danger" onclick="deleteTrade(${t.id})">✕</button></td>
+      <td><span class="badge ${badge}">${escapeText(t.result)}</span></td>
+      <td>${escapeText(t.setup || "—")}</td>
+      <td style="color:${t.emotion?.includes('FOMO')||t.emotion?.includes('Revenge')?"var(--red)":"inherit"}">${escapeText(t.emotion || "—")}</td>
+      <td style="color:var(--muted); max-width:320px; white-space:normal; overflow-wrap:anywhere">${escapeText(t.mistake || "—")}</td>
+      <td><button class="btn btn-danger" data-trade-id="${Number(t.id)}" aria-label="Delete ${escapeText(t.ticker)} trade from ${escapeText(t.date)}" onclick="deleteTrade(${Number(t.id)}, this)">Delete</button></td>
     </tr>`;
   }).join("") || `<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:40px;">No trades yet. Log your first trade.</td></tr>`;
+  return true;
+  } catch {
+    toast("Could not load trade history. Select Trade History to retry.", true);
+    return false;
+  }
 }
 
-async function deleteTrade(id) {
-  if (!confirm("Delete this trade?")) return;
-  await fetch("/api/trades/" + id, { method: "DELETE" });
-  loadTrades();
-  loadHeaderStats();
-  toast("Trade deleted.");
+async function deleteTrade(id, button) {
+  if (pending.has(id) || !confirm("Delete this trade? This cannot be undone.")) return;
+  pending.add(id);
+  button.disabled = true;
+  try {
+    await request("/api/trades/" + id, { method: "DELETE" });
+    const restoreFocus = document.activeElement === button || document.activeElement === document.body;
+    // The deletion is confirmed even if refreshing the remaining history fails.
+    button.closest("tr")?.remove();
+    const refreshed = await loadTrades();
+    if (restoreFocus && !document.getElementById("panel-trades").hidden) document.getElementById("panel-trades").focus();
+    loadHeaderStats();
+    if (refreshed === false) {
+      toast("Trade deleted, but history could not be refreshed. Select Trade History to retry.", true);
+    } else {
+      toast("Trade deleted.");
+    }
+  } catch {
+    toast("Could not confirm deletion. Refresh Trade History before retrying.", true);
+    button.disabled = false;
+    if (document.activeElement === document.body) button.focus();
+  } finally { pending.delete(id); }
 }
 
 // ─── Load stats ───
 async function loadStats() {
-  const res = await fetch("/api/stats");
-  const data = await res.json();
+  const version = ++statsRequest;
+  try {
+  const data = await request("/api/stats");
+  if (version !== statsRequest) return;
   const grid = document.getElementById("stats-grid");
 
   if (data.message) {
-    grid.innerHTML = `<p style="color:var(--muted);font-family:var(--font-mono)">${data.message}</p>`;
+    grid.innerHTML = `<p style="color:var(--muted);font-family:var(--font-mono)">${escapeText(data.message)}</p>`;
+    document.getElementById("setup-table").replaceChildren();
     return;
   }
 
@@ -625,7 +708,7 @@ async function loadStats() {
     const wr = s.wins + s.losses > 0 ? (s.wins / (s.wins + s.losses) * 100).toFixed(0) : "—";
     const pnlColor = s.pnl >= 0 ? "var(--green)" : "var(--red)";
     return `<tr>
-      <td>${name}</td>
+      <td>${escapeText(name)}</td>
       <td><span class="positive">${s.wins}</span></td>
       <td><span class="negative">${s.losses}</span></td>
       <td>${wr}%</td>
@@ -634,19 +717,23 @@ async function loadStats() {
   }).join("");
 
   document.getElementById("setup-table").innerHTML = `
-    <div class="section-title" style="margin-top:32px">SETUP PERFORMANCE</div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Setup</th><th>Wins</th><th>Losses</th><th>Win%</th><th>Net P&L</th></tr></thead>
+    <h3 class="section-title" style="margin-top:32px">SETUP PERFORMANCE</h3>
+    <div class="table-wrap" role="region" aria-label="Setup performance table" tabindex="0"><table><caption class="sr-only">Results by setup</caption>
+      <thead><tr><th scope="col">Setup</th><th scope="col">Wins</th><th scope="col">Losses</th><th scope="col">Win%</th><th scope="col">Net P&L</th></tr></thead>
       <tbody>${rows || "<tr><td colspan='5' style='color:var(--muted)'>No data</td></tr>"}</tbody>
     </table></div>
   `;
+  } catch { toast("Could not load analytics. Select Analytics to retry.", true); }
 }
 
 // ─── Header stats ───
 async function loadHeaderStats() {
-  const res = await fetch("/api/stats");
-  const data = await res.json();
-  if (data.message) return;
+  try {
+  const data = await request("/api/stats");
+  if (data.message) {
+    ["hdr-pnl", "hdr-wr", "hdr-total", "hdr-streak"].forEach(id => { document.getElementById(id).textContent = "—"; });
+    return;
+  }
 
   const pnl  = document.getElementById("hdr-pnl");
   pnl.textContent = `${data.total_pnl >= 0 ? "+" : ""}$${data.total_pnl.toFixed(2)}`;
@@ -661,18 +748,30 @@ async function loadHeaderStats() {
   const streak = document.getElementById("hdr-streak");
   streak.textContent = `${data.current_streak.count} ${data.current_streak.type}`;
   streak.className = "value " + (data.current_streak.type === "WIN" ? "positive" : "negative");
+  } catch { toast("Could not load summary statistics. Reload the page to retry.", true); }
 }
 
 // ─── AI Prompt ───
 async function loadAIPrompt() {
-  const res  = await fetch("/api/ai_prompt");
-  const data = await res.json();
-  document.getElementById("ai-prompt").textContent = data.prompt;
+  if (pending.has("prompt")) return;
+  pending.add("prompt");
+  try {
+    const data = await request("/api/ai_prompt");
+    document.getElementById("ai-prompt").textContent = data.prompt;
+    toast("Coaching prompt generated. Review it before sharing with another service.");
+  } catch { toast("Could not generate the prompt. Try again.", true); }
+  finally { pending.delete("prompt"); }
 }
 
-function copyPrompt() {
+async function copyPrompt() {
   const text = document.getElementById("ai-prompt").textContent;
-  navigator.clipboard.writeText(text).then(() => toast("Prompt copied to clipboard!"));
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("Prompt copied to clipboard!");
+  } catch {
+    toast("Clipboard is unavailable. Select and copy the prompt text manually.", true);
+    document.getElementById("ai-prompt").focus();
+  }
 }
 
 function exportCSV() {

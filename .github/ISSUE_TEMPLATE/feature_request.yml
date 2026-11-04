@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest a focused improvement.
+title: '[Feature]: '
+body:
+- type: markdown
+  attributes:
+    value: This issue is public. Use synthetic or redacted examples. Do not include credentials, account identifiers, private trading records, or personal data. For vulnerabilities, use [SECURITY.md](https://github.com/mickpletcher/AlpacaTrading/blob/main/SECURITY.md) instead. Please follow our [code of conduct](https://github.com/mickpletcher/AlpacaTrading/blob/main/CODE_OF_CONDUCT.md).
+- type: textarea
+  id: problem
+  attributes:
+    label: Problem or intended task
+    description: ''
+  validations:
+    required: true
+- type: textarea
+  id: proposal
+  attributes:
+    label: Proposed improvement
+    description: ''
+  validations:
+    required: true
+- type: textarea
+  id: alternatives
+  attributes:
+    label: Alternatives considered
+    description: Include safety and accessibility considerations when relevant.
+  validations:
+    required: false

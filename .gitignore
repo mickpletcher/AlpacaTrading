@@ -46,3 +46,7 @@ Backtesting/output/
 Operations/runtime/
 output/playwright/
 .playwright-cli/
+
+# Isolated browser test dependencies and synthetic reports
+Tests/browser/node_modules/
+Tests/browser/.reports/

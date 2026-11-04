@@ -98,8 +98,14 @@ See `docs/decisions/README.md`.
 
 - The RSI plus MACD bot does not yet manage entry, protection, and exit orders as one lifecycle. See BUG-007.
 - The BTC executor validates notional against the signal price instead of an authoritative execution quote. See BUG-008.
-- The local journal renders some stored values as HTML. See BUG-009.
+- Journal text escaping is covered by focused DOM tests, but server limits and a restrictive Content Security Policy remain incomplete. See BUG-009.
 - Reproducible evaluation currently covers only the fixed EMA baseline. PowerShell warning control remains technical debt.
+
+## Accessibility and Community Surface
+
+The journal provides labeled native controls, semantic keyboard tabs, visible focus, text feedback, and reduced motion. Repository-generated HTML summaries use captions, scoped table headers, named keyboard-scrollable regions, and a tabular alternative for the backtest equity curve. Calculations, storage ownership, and the paper-only execution boundary are unchanged.
+
+Evidence: `Journal/journal.html`, `Journal/analyze_journal.py`, `Backtesting/reproducible_backtest.py`, `Operations/health.py`, and `Tests/browser/`. Community-policy authorities and reporting routes are mapped in `PROJECT-STANDARD.md`; accessibility scope and untested environments are stated in `ACCESSIBILITY.md`.
 
 ## Planned Evolution
 

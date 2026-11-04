@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+- name: Private vulnerability report
+  url: https://github.com/mickpletcher/AlpacaTrading/security/advisories/new
+  about: Report a suspected vulnerability privately. Do not post exploit details or credentials in public issues.
+- name: Support and reporting routes
+  url: https://github.com/mickpletcher/AlpacaTrading/blob/main/SUPPORT.md
+  about: Find help, accessibility options, and conduct-reporting instructions.
