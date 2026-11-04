@@ -6,6 +6,8 @@
 
 See [fragment 007](changelog.d/007-community-accessibility.md) for community intake, journal accessibility, report semantics, and regression-check changes. No release or trading-boundary change is made by that fragment.
 
+See the [issue-form correction](changelog.d/007-issue-form-validation.md) for GitHub's nonempty field-description requirement and the added live intake verification procedure.
+
 This repository uses date-stamped change sections. In-flight changes are recorded under `changelog.d/` and consolidated here during release or monthly maintenance.
 
 Historical repository upgrades before adoption of this changelog remain in `upgrades/README.md`.

@@ -9,14 +9,14 @@ body:
   id: location
   attributes:
     label: Affected file or link
-    description: ''
+    description: Provide the repository path or documentation URL.
   validations:
     required: true
 - type: textarea
   id: problem
   attributes:
     label: What is unclear, missing, or incorrect?
-    description: ''
+    description: Describe the confusing or incorrect information and what you were trying to do.
   validations:
     required: true
 - type: textarea

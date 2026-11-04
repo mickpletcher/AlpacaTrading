@@ -151,6 +151,8 @@ Connectivity proves only that the credentials and endpoint respond. It does not 
 
 Community policy and issue-form checks, journal structure/contrast checks, and generated-report checks run in the normal pytest suite. They use no credentials. They do not prove screen-reader support or full WCAG conformance.
 
+Issue-form descriptions must be nonempty strings when present. After issue-form changes reach the default branch, verify every expected form in GitHub's issue chooser and open each form without submitting it. A 100 percent community profile or a green Issue templates checklist entry does not prove that every form is valid; GitHub can hide invalid forms while still recognizing the valid ones.
+
 For browser validation, install Node.js 22 or newer and the pinned test-only packages, then run from the repository root:
 
 ```powershell
