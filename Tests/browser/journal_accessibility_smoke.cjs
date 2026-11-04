@@ -19,6 +19,7 @@ const AxeBuilder = require('@axe-core/playwright').default;
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     let failSave = false, failHistory = false, failDelete = false, slowHistory = false, saves = 0, deletes = 0;
+    let readGate;
     let releaseStaleHistory, staleCapturedResolve;
     const staleCaptured = new Promise(resolve => { staleCapturedResolve = resolve; });
     let rows = [{ id: 1, date: '2026-01-01', ticker: 'SAMPLE', direction: 'LONG', qty: 1,
@@ -26,6 +27,11 @@ const AxeBuilder = require('@axe-core/playwright').default;
     await page.route('**/*', async route => {
       const request = route.request(), url = new URL(request.url());
       let body, status = 200;
+      if (readGate?.path === url.pathname && request.method() === 'GET') {
+        const gate = readGate; readGate = null;
+        await new Promise(resolve => { gate.release = resolve; gate.capturedResolve(); });
+        return route.fulfill({ status: gate.status, contentType: 'application/json', body: JSON.stringify(gate.body) });
+      }
       if (url.pathname === '/') return route.fulfill({ contentType: 'text/html', body: fs.readFileSync(path.join(__dirname, '../../Journal/journal.html'), 'utf8') });
       if (url.pathname === '/api/stats') body = { total_pnl: 1, win_rate: 100, total_trades: rows.length, avg_win: 1, avg_loss: 0, profit_factor: '1.0', current_streak: { type: 'WIN', count: 1 }, setup_performance: { Example: { wins: 1, losses: 0, pnl: 1 } } };
       else if (url.pathname === '/api/ai_prompt') body = { prompt: 'Synthetic coaching prompt.' };
@@ -40,7 +46,7 @@ const AxeBuilder = require('@axe-core/playwright').default;
           await new Promise(resolve => { releaseStaleHistory = resolve; staleCapturedResolve(); });
         }
       }
-      else if (url.pathname === '/api/trades/1' && request.method() === 'DELETE') { deletes++; status = failDelete ? 500 : 200; if (!failDelete) rows = []; body = { status: 'deleted' }; }
+      else if (url.pathname === '/api/trades/1' && request.method() === 'DELETE') { deletes++; status = failDelete ? 500 : 200; if (!failDelete) rows = rows.filter(row => row.id !== 1); body = { status: 'deleted' }; }
       else return route.abort();
       await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
     });
@@ -58,10 +64,16 @@ const AxeBuilder = require('@axe-core/playwright').default;
     }
     await page.getByLabel('Ticker (required)').fill('SAMPLE');
     await page.getByLabel('Entry Price (required)').fill('10');
+    await page.setViewportSize({ width: 320, height: 900 });
     failSave = true;
     await page.locator('[type="submit"]').click();
     await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Could not confirm the save'));
     assert.equal(await page.locator('#f-ticker').inputValue(), 'SAMPLE');
+    const errorBounds = await page.locator('#toast').boundingBox();
+    assert.ok(errorBounds.y >= 0 && errorBounds.y + errorBounds.height <= 900,
+      'User-triggered save error is in the 320px viewport after submitting at the bottom');
+    await page.screenshot({ path: path.join(screenshots, 'journal-save-error-320.png') });
+    await page.setViewportSize({ width: 1280, height: 900 });
     failSave = false;
     await page.evaluate(() => { const f = document.querySelector('form'); f.requestSubmit(); f.requestSubmit(); });
     await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Trade saved'));
@@ -77,6 +89,18 @@ const AxeBuilder = require('@axe-core/playwright').default;
     releaseStaleHistory();
     await page.evaluate(() => window.historyChecks);
     assert.equal(await page.locator('#trades-body').textContent().then(t => t.includes('STALE')), false, 'Older trade loads cannot replace newer data');
+    for (const [loader, endpoint] of [['loadTrades', '/api/trades'], ['loadStats', '/api/stats']]) {
+      const gate = { path: endpoint, status: 500, body: {} };
+      const captured = new Promise(resolve => { gate.capturedResolve = resolve; });
+      readGate = gate;
+      await page.evaluate(name => { window.oldRead = window[name](); }, loader);
+      await captured;
+      await page.evaluate(async name => { await window[name](); toast('Latest operation succeeded.'); }, loader);
+      await page.waitForFunction(() => document.querySelector('#toast').textContent === 'Latest operation succeeded.');
+      gate.release(); await page.evaluate(() => window.oldRead);
+      await page.waitForTimeout(100); // Allow a wrongly queued status callback to fire.
+      assert.equal(await page.locator('#toast').textContent(), 'Latest operation succeeded.', `${loader} ignores an older failure`);
+    }
     await page.locator('#tab-trades').click();
     const remove = page.getByRole('button', { name: 'Delete SAMPLE trade from 2026-01-01' });
     await remove.waitFor();
@@ -110,7 +134,7 @@ const AxeBuilder = require('@axe-core/playwright').default;
     failHistory = true; // DELETE succeeds, but the follow-up refresh fails.
     page.once('dialog', dialog => dialog.accept());
     await remove.click();
-    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Trade deleted'));
+    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('history could not be refreshed'));
     assert.equal(deletes, 2);
     assert.equal(await page.locator('[data-trade-id]').count(), 0);
     assert.match(await page.locator('#toast').textContent(), /history could not be refreshed/);
@@ -118,6 +142,51 @@ const AxeBuilder = require('@axe-core/playwright').default;
     failHistory = true;
     await page.locator('#tab-trades').click();
     await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Could not load trade history'));
+    failHistory = false;
+    rows = [{ id: 1, date: '2026-01-01', ticker: 'SAMPLE', direction: 'LONG', qty: 1,
+      entry: 10, exit: 11, pnl: 1, result: 'WIN', setup: 'Example', emotion: 'Calm', mistake: 'Synthetic only' }];
+    await page.evaluate(() => loadTrades());
+    const refreshGate = { path: '/api/trades', status: 200, body: [] };
+    const refreshCaptured = new Promise(resolve => { refreshGate.capturedResolve = resolve; });
+    readGate = refreshGate;
+    page.once('dialog', dialog => dialog.accept());
+    await remove.click();
+    await refreshCaptured;
+    const exportControl = page.locator('#panel-trades .btn-export');
+    await exportControl.focus();
+    refreshGate.release();
+    await page.waitForFunction(() => document.querySelector('#toast').textContent === 'Trade deleted.');
+    assert.equal(await page.locator(':focus').textContent(), await exportControl.textContent(),
+      'Delete completion preserves focus moved to Export CSV during refresh');
+    const firstRow = { id: 1, date: '2026-01-01', ticker: 'SAMPLE', direction: 'LONG', qty: 1,
+      entry: 10, exit: 11, pnl: 1, result: 'WIN', setup: 'Example', emotion: 'Calm', mistake: 'Synthetic only' };
+    const survivingRow = { ...firstRow, id: 2, ticker: 'SURVIVOR' };
+    rows = [firstRow, survivingRow];
+    await page.evaluate(() => { document.querySelector('#toast').textContent = ''; return loadTrades(); });
+    const survivingGate = { path: '/api/trades', status: 200, body: [survivingRow] };
+    const survivingCaptured = new Promise(resolve => { survivingGate.capturedResolve = resolve; });
+    readGate = survivingGate;
+    page.once('dialog', dialog => dialog.accept());
+    await remove.click(); await survivingCaptured;
+    await page.locator('[data-trade-id="2"]').focus();
+    survivingGate.release();
+    await page.waitForFunction(() => document.querySelector('#toast').textContent === 'Trade deleted.');
+    assert.equal(await page.locator(':focus').getAttribute('data-trade-id'), '2',
+      'Refreshing rows preserves focus on the matching surviving trade action');
+    rows = [firstRow]; await page.evaluate(() => loadTrades());
+    const supersededGate = { path: '/api/trades', status: 500, body: {} };
+    const supersededCaptured = new Promise(resolve => { supersededGate.capturedResolve = resolve; });
+    readGate = supersededGate;
+    page.once('dialog', dialog => dialog.accept());
+    await remove.click(); await supersededCaptured;
+    failHistory = true;
+    await page.evaluate(() => loadTrades());
+    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Could not load trade history'));
+    supersededGate.release();
+    await page.waitForFunction(() => !pending.has(1));
+    await page.waitForTimeout(100);
+    assert.match(await page.locator('#toast').textContent(), /Could not load trade history/,
+      'Superseded delete refresh must not replace the newest failed read feedback');
     failHistory = false;
     await page.locator('#tab-ai').click();
     await page.getByRole('button', { name: /GENERATE PROMPT/ }).click();

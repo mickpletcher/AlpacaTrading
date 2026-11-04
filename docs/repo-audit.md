@@ -35,6 +35,8 @@ BUG-007, BUG-008, and BUG-009 remain open. Text escaping improves part of the jo
 
 Pull request 42 was authorized and merged at `5ef326aad5b5901192b6908caed8f1a64264b796`. GitHub's API reports 100 percent community health, and its Community Standards page marks all eight checklist entries Added, including Security policy and Issue templates; it also recognizes `ACCESSIBILITY.md`. Post-merge [CI run 41921847677](https://github.com/mickpletcher/AlpacaTrading/actions/runs/41921847677) passed Python, browser accessibility, PowerShell, and documentation checks. Direct issue-chooser review nevertheless found only two visible forms. GitHub rejected the other three because five field descriptions were empty. The scoped correction replaces those descriptions, adds a regression assertion, and requires every form to be opened in the live chooser after merge. That final rendering check remains pending until the correction reaches the default branch.
 
+The delayed review of pull request 42 also identified offscreen mobile save errors, obsolete failed-read feedback, and focus theft during a delayed post-delete refresh. All three were reproduced with failing synthetic regressions. [Pull request 43](https://github.com/mickpletcher/AlpacaTrading/pull/43) adds narrow fixes and tests: reveal active-form errors without changing focus, discard stale failures before and during delayed announcement, and recheck focus after refresh. Exact-head hosted evidence and final integration acceptance are tracked in that pull request.
+
 The sections below retain the last full assessment's evidence. Historical counts and GitHub state are explicitly dated and must not be treated as new executions for specification 007.
 
 ## Plain-Language Summary

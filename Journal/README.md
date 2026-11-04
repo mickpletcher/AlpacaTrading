@@ -213,8 +213,9 @@ Typical flow:
 - Use the **Skip to journal** link to move past the header.
 - In the section tabs, use Left/Right Arrow, Home, and End to change sections. Use Tab to move into the selected panel and its controls.
 - Every form field has a visible label. Required fields are marked, and browser validation identifies missing values.
-- Save and error feedback remains on the page and is announced through a polite status region. If a save cannot be confirmed, check Trade History before retrying so you do not create a duplicate.
-- Trade tables are named, keyboard-focusable scroll regions. Delete buttons identify the trade and ask for confirmation. Cancelling preserves the record; successful deletion moves focus to the history panel.
+- Save and error feedback remains on the page and is announced through a polite status region. A failed save brings offscreen feedback into view while the form remains active, without moving focus or interrupting navigation to another panel. If a save cannot be confirmed, check Trade History before retrying so you do not create a duplicate.
+- Trade tables are named, keyboard-focusable scroll regions. Delete buttons identify the trade and ask for confirmation. Cancelling preserves the record. Successful deletion restores focus to the history panel only if the user has not moved to another control during the refresh.
+- Superseded history and analytics requests cannot replace newer feedback with obsolete failures. Background read failures do not scroll the page.
 - The layout supports narrow screens, text is not conveyed through color alone, and reduced-motion preferences disable transitions. The continuous decorative scanline has been removed.
 - Generated coaching prompts are keyboard-focusable and selectable. If clipboard access fails, copy the text manually. Review private information before sharing externally.
 

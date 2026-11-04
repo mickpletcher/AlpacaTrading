@@ -552,12 +552,23 @@ document.querySelector('[role="tablist"]').addEventListener("keydown", e => {
 
 // Persistent feedback is available visually and to assistive technology.
 let toastTimer;
-function toast(msg, isError=false) {
+function toast(msg, isError=false, options={}) {
   const el = document.getElementById("toast");
   clearTimeout(toastTimer);
   el.textContent = "";
   el.style.color = isError ? "var(--red)" : "var(--accent)";
-  toastTimer = setTimeout(() => { el.textContent = (isError ? "Error: " : "") + msg; }, 50);
+  toastTimer = setTimeout(() => {
+    if (options.isCurrent && !options.isCurrent()) return;
+    el.textContent = (isError ? "Error: " : "") + msg;
+    // Keep the persistent live region while revealing an offscreen error from
+    // the active form. Do not move focus or interrupt navigation elsewhere.
+    if (options.revealIf?.()) {
+      const bounds = el.getBoundingClientRect();
+      if (bounds.top < 0 || bounds.bottom > window.innerHeight) {
+        el.scrollIntoView({ block: "nearest", behavior: "auto" });
+      }
+    }
+  }, 50);
 }
 
 // ─── Set today's date ───
@@ -599,7 +610,10 @@ document.getElementById("trade-form").addEventListener("submit", async e => {
     if (!document.getElementById("panel-log").hidden) document.getElementById("f-ticker").focus();
     loadHeaderStats();
   } catch {
-    toast("Could not confirm the save. Your entries are preserved. Check Trade History before retrying to avoid a duplicate.", true);
+    toast("Could not confirm the save. Your entries are preserved. Check Trade History before retrying to avoid a duplicate.", true, {
+      revealIf: () => !document.getElementById("panel-log").hidden &&
+        (e.target.contains(document.activeElement) || document.activeElement === document.body)
+    });
   } finally {
     pending.delete("save");
     submit.disabled = false;
@@ -614,6 +628,8 @@ async function loadTrades() {
   const trades = await request("/api/trades");
   if (version !== tradesRequest) return;
   const tbody = document.getElementById("trades-body");
+  const focusedTradeId = tbody.contains(document.activeElement)
+    ? document.activeElement.getAttribute("data-trade-id") : null;
 
   tbody.innerHTML = trades.map(t => {
     const pnl = t.pnl !== null
@@ -638,9 +654,18 @@ async function loadTrades() {
       <td><button class="btn btn-danger" data-trade-id="${Number(t.id)}" aria-label="Delete ${escapeText(t.ticker)} trade from ${escapeText(t.date)}" onclick="deleteTrade(${Number(t.id)}, this)">Delete</button></td>
     </tr>`;
   }).join("") || `<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:40px;">No trades yet. Log your first trade.</td></tr>`;
+  if (focusedTradeId !== null && !document.getElementById("panel-trades").hidden && document.activeElement === document.body) {
+    // Replacing rows must not discard a user's newer focus on a surviving trade.
+    [...tbody.querySelectorAll("[data-trade-id]")]
+      .find(control => control.getAttribute("data-trade-id") === focusedTradeId)
+      ?.focus({ preventScroll: true });
+  }
   return true;
   } catch {
-    toast("Could not load trade history. Select Trade History to retry.", true);
+    if (version !== tradesRequest) return;
+    toast("Could not load trade history. Select Trade History to retry.", true, {
+      isCurrent: () => version === tradesRequest
+    });
     return false;
   }
 }
@@ -651,17 +676,18 @@ async function deleteTrade(id, button) {
   button.disabled = true;
   try {
     await request("/api/trades/" + id, { method: "DELETE" });
-    const restoreFocus = document.activeElement === button || document.activeElement === document.body;
     // The deletion is confirmed even if refreshing the remaining history fails.
     button.closest("tr")?.remove();
+    toast("Deletion confirmed.");
     const refreshed = await loadTrades();
-    if (restoreFocus && !document.getElementById("panel-trades").hidden) document.getElementById("panel-trades").focus();
+    if ((document.activeElement === button || document.activeElement === document.body) && !document.getElementById("panel-trades").hidden) document.getElementById("panel-trades").focus();
     loadHeaderStats();
     if (refreshed === false) {
       toast("Trade deleted, but history could not be refreshed. Select Trade History to retry.", true);
-    } else {
+    } else if (refreshed === true) {
       toast("Trade deleted.");
     }
+    // An undefined refresh result was superseded; retain the newer feedback.
   } catch {
     toast("Could not confirm deletion. Refresh Trade History before retrying.", true);
     button.disabled = false;
@@ -723,7 +749,12 @@ async function loadStats() {
       <tbody>${rows || "<tr><td colspan='5' style='color:var(--muted)'>No data</td></tr>"}</tbody>
     </table></div>
   `;
-  } catch { toast("Could not load analytics. Select Analytics to retry.", true); }
+  } catch {
+    if (version !== statsRequest) return;
+    toast("Could not load analytics. Select Analytics to retry.", true, {
+      isCurrent: () => version === statsRequest
+    });
+  }
 }
 
 // ─── Header stats ───

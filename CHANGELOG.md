@@ -8,6 +8,8 @@ See [fragment 007](changelog.d/007-community-accessibility.md) for community int
 
 See the [issue-form correction](changelog.d/007-issue-form-validation.md) for GitHub's nonempty field-description requirement and the added live intake verification procedure.
 
+See the [journal feedback correction](changelog.d/007-journal-feedback.md) for mobile error visibility, obsolete request errors, and focus preservation during delayed refreshes.
+
 This repository uses date-stamped change sections. In-flight changes are recorded under `changelog.d/` and consolidated here during release or monthly maintenance.
 
 Historical repository upgrades before adoption of this changelog remain in `upgrades/README.md`.
