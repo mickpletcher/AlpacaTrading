@@ -116,7 +116,7 @@ def build_html_report(summary: dict[str, object]) -> str:
     h1 {{ margin-bottom: 0.25rem; }}
     .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1rem; margin: 1.5rem 0; }}
     .card {{ background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08); }}
-    table {{ width: 100%; border-collapse: collapse; background: white; }}
+    table {{ width: 100%; min-width: 60em; overflow-wrap: normal; border-collapse: collapse; background: white; }}
     th, td {{ border: 1px solid #d2d6dc; padding: 0.75rem; text-align: left; }}
     .table-wrap {{ overflow-x: auto; }}
     .table-wrap:focus-visible {{ outline: 3px solid #185abc; outline-offset: 3px; }}

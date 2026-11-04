@@ -73,3 +73,13 @@ def test_journal_report_keeps_untrusted_text_as_text():
     document = build_html_report(summarize([trade]))
     assert '<img' not in document
     assert '&lt;img src=x onerror=alert(1)&gt;' in document
+
+
+def test_report_tables_keep_readable_minimum_width(generated_report):
+    compact = "".join(generated_report.split())
+    assert "overflow-wrap:normal" in compact
+    assert "min-width:60em" in compact or "min-width:40em" in compact
+    if "Out-of-sample equity observations" in generated_report:
+        assert "detailstable{min-width:24em}" in compact
+    if "Local Trading Health" in generated_report:
+        assert ".status{white-space:nowrap" in compact

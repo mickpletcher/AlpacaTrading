@@ -45,6 +45,10 @@ const fixtures = process.env.REPORT_FIXTURES || path.join(__dirname, '.reports')
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true,
           `${file}: page must reflow at ${width}px; tables may scroll inside their named regions`);
         for (const region of await page.locator('[role="region"]:visible').all()) {
+          if (width === 320) {
+            assert.equal(await region.evaluate(element => element.scrollWidth > element.clientWidth + 1), true,
+              `${file}: narrow tables must scroll instead of crushing readable columns`);
+          }
           await region.focus();
           assert.equal(await region.evaluate(element => element === document.activeElement), true);
           assert.notEqual(await region.evaluate(element => getComputedStyle(element).outlineStyle), 'none');
@@ -70,6 +74,8 @@ const fixtures = process.env.REPORT_FIXTURES || path.join(__dirname, '.reports')
         `${file}: 200% text must not cause whole-page horizontal overflow at 320px`);
       for (const region of await page.locator('[role="region"]:visible').all()) {
         assert.equal(await region.evaluate(element => element.clientWidth > 0 && element.clientHeight > 0), true);
+        assert.equal(await region.evaluate(element => element.scrollWidth > element.clientWidth + 1), true,
+          `${file}: enlarged table text must retain readable horizontally scrollable columns`);
       }
       assert.deepEqual(errors, [], `${file}: unexpected browser JavaScript errors`);
       checks.push(`${file}: 200% text enlargement and JavaScript error check passed`);
