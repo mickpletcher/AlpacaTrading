@@ -17,7 +17,8 @@ const fixtures = process.env.REPORT_FIXTURES || path.join(__dirname, '.reports')
   const checks = [];
   try {
     for (const file of reports) {
-      const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      const page = await context.newPage();
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       const document = fs.readFileSync(path.join(fixtures, file), 'utf8');
@@ -53,6 +54,7 @@ const fixtures = process.env.REPORT_FIXTURES || path.join(__dirname, '.reports')
             await page.waitForFunction(element => element.scrollLeft > 0, await region.elementHandle());
           }
         }
+        await page.screenshot({ path: path.join(fixtures, `${file}-${width}.png`), fullPage: true });
         const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
         assert.deepEqual(result.violations.map(v => ({ id: v.id, impact: v.impact, targets: v.nodes.map(n => n.target) })), [],
           `${file}: automated WCAG A/AA findings at ${width}px`);
@@ -71,7 +73,7 @@ const fixtures = process.env.REPORT_FIXTURES || path.join(__dirname, '.reports')
       }
       assert.deepEqual(errors, [], `${file}: unexpected browser JavaScript errors`);
       checks.push(`${file}: 200% text enlargement and JavaScript error check passed`);
-      await page.close();
+      await context.close();
     }
     console.log(checks.join('\n'));
   } finally {

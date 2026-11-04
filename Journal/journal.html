@@ -635,7 +635,11 @@ async function loadTrades() {
       <td><button class="btn btn-danger" data-trade-id="${Number(t.id)}" aria-label="Delete ${escapeText(t.ticker)} trade from ${escapeText(t.date)}" onclick="deleteTrade(${Number(t.id)}, this)">Delete</button></td>
     </tr>`;
   }).join("") || `<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:40px;">No trades yet. Log your first trade.</td></tr>`;
-  } catch { toast("Could not load trade history. Select Trade History to retry.", true); }
+  return true;
+  } catch {
+    toast("Could not load trade history. Select Trade History to retry.", true);
+    return false;
+  }
 }
 
 async function deleteTrade(id, button) {
@@ -645,10 +649,16 @@ async function deleteTrade(id, button) {
   try {
     await request("/api/trades/" + id, { method: "DELETE" });
     const restoreFocus = document.activeElement === button || document.activeElement === document.body;
-    await loadTrades();
+    // The deletion is confirmed even if refreshing the remaining history fails.
+    button.closest("tr")?.remove();
+    const refreshed = await loadTrades();
     if (restoreFocus && !document.getElementById("panel-trades").hidden) document.getElementById("panel-trades").focus();
     loadHeaderStats();
-    toast("Trade deleted.");
+    if (refreshed === false) {
+      toast("Trade deleted, but history could not be refreshed. Select Trade History to retry.", true);
+    } else {
+      toast("Trade deleted.");
+    }
   } catch {
     toast("Could not confirm deletion. Refresh Trade History before retrying.", true);
     button.disabled = false;

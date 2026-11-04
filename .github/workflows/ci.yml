@@ -64,6 +64,14 @@ jobs:
           npm --prefix Tests/browser test
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Upload synthetic accessibility screenshots
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: accessibility-screenshots
+          path: Tests/browser/.reports/*.png
+          if-no-files-found: ignore
+
       - name: Upload Python coverage
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
