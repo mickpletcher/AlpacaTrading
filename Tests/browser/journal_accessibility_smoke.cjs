@@ -83,9 +83,13 @@ const AxeBuilder = require('@axe-core/playwright').default;
     // Audit populated history before deleting its only row.
     for (const width of [1280, 320]) {
       await page.setViewportSize({ width, height: 900 });
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true,
-        `Populated history reflows at ${width}px`);
       await page.screenshot({ path: path.join(screenshots, `journal-populated-${width}.png`), fullPage: true });
+      const layout = await page.evaluate(() => ({
+        width: innerWidth, scrollWidth: document.documentElement.scrollWidth,
+        overflowing: [...document.querySelectorAll('body *')].filter(el => !el.closest('.table-wrap') && el.getBoundingClientRect().right > innerWidth + 1).map(el => ({tag: el.tagName, id: el.id, className: el.className, width: el.getBoundingClientRect().width}))
+      }));
+      assert.ok(layout.scrollWidth <= layout.width + 1,
+        `Populated history reflows at ${width}px: ${JSON.stringify(layout)}`);
       const report = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
       assert.deepEqual(report.violations.map(v => ({ id: v.id, targets: v.nodes.map(n => n.target) })), [],
         `Populated history has no axe WCAG A/AA violations at ${width}px`);

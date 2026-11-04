@@ -328,13 +328,16 @@
   button, input, select { min-height:44px; }
   button:disabled { cursor:wait; }
   .tabs, .toolbar, header, .header-stats { flex-wrap:wrap; gap:12px; }
-  .form-group, .panel { min-width:0; }
+  .form-group, .panel, .table-wrap, .stat-card { min-width:0; }
+  .logo { max-width:100%; overflow-wrap:anywhere; }
+  .table-wrap { max-width:100%; }
   .prompt-box { overflow-wrap:anywhere; }
   #toast { position:static; margin:16px auto; max-width:1336px; opacity:1; min-height:44px; border:0; overflow-wrap:anywhere; }
   #toast:empty { padding:0; }
   [hidden] { display:none !important; }
   @media (max-width:600px) {
     header, .container { padding:16px; }
+    .logo { font-size:24px; letter-spacing:2px; }
     .header-stats { width:100%; justify-content:space-between; }
     .stat-pill { align-items:flex-start; }
     .tabs .tab { padding:10px; flex:1 1 40%; letter-spacing:1px; }
