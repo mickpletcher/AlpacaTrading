@@ -38,22 +38,22 @@ The webhook checks `quantity * payload price`, but the executor submits a market
 
 **Required fix:** Validate notional against a current authoritative quote with a configured price-deviation allowance, and fail closed when a reliable quote is unavailable.
 
-## BUG-009: Journal renders stored text as HTML
+## BUG-009: Journal input limits and browser defense remain incomplete
 
 **Status:** Open
 
 **Severity:** Medium
 **Area:** `Journal/`
 
-The API stores several text fields without length or content validation. The browser inserts stored values into `innerHTML` when rendering history and setup statistics.
+The API stores several text fields without consistent length or content validation. The journal now escapes text interpolated into history and setup tables, but still uses HTML templates and does not set a restrictive Content Security Policy.
 
-**Impact:** Crafted journal or imported CSV values can execute unwanted browser content when the local journal page renders them.
+**Impact:** Input abuse and browser defense-in-depth remain insufficiently validated. The accessibility change improves text rendering but is not a complete security remediation.
 
-**Evidence:** `Journal/journal_server.py` lines 137 through 152 and `Journal/journal.html` lines 559 through 640.
+**Evidence:** `Journal/journal_server.py` input handling; `Journal/journal.html` `escapeText`, `loadTrades`, and `loadStats`; `Tests/browser/journal_accessibility_behavior.cjs` covers literal text without certifying the whole input boundary.
 
 **Safe use:** Keep the journal loopback-only. Do not import journal CSV files from an untrusted source.
 
-**Required fix:** Render user-controlled values with `textContent`, add server-side limits, add regression tests, and set a restrictive Content Security Policy.
+**Required fix:** Complete safe DOM construction, server-side limits, comprehensive injection regression tests, and a restrictive Content Security Policy in a separately scoped security change.
 
 BUG-001 through BUG-006 were resolved by `specs/003-trading-safety-remediation/`. Their permanent history and validation summary are recorded under Upgrade 004 in `upgrades/README.md`.
 

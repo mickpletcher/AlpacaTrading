@@ -1,0 +1,28 @@
+name: Documentation correction
+description: Improve instructions, examples, or explanations.
+title: '[Docs]: '
+body:
+- type: markdown
+  attributes:
+    value: This issue is public. Use synthetic or redacted examples. Do not include credentials, account identifiers, private trading records, or personal data. For vulnerabilities, use [SECURITY.md](https://github.com/mickpletcher/AlpacaTrading/blob/main/SECURITY.md) instead. Please follow our [code of conduct](https://github.com/mickpletcher/AlpacaTrading/blob/main/CODE_OF_CONDUCT.md).
+- type: input
+  id: location
+  attributes:
+    label: Affected file or link
+    description: ''
+  validations:
+    required: true
+- type: textarea
+  id: problem
+  attributes:
+    label: What is unclear, missing, or incorrect?
+    description: ''
+  validations:
+    required: true
+- type: textarea
+  id: suggestion
+  attributes:
+    label: Suggested correction or useful example
+    description: Use synthetic examples and preserve paper-only defaults.
+  validations:
+    required: false

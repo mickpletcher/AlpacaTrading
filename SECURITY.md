@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Security Policy
 
 ## Supported Versions
@@ -6,11 +8,13 @@ Security fixes are applied to `main` and the latest published release. Older rel
 
 ## Reporting a Vulnerability
 
-Use GitHub private vulnerability reporting for this repository. Do not open a public issue for a suspected vulnerability.
+Use [GitHub private vulnerability reporting](https://github.com/mickpletcher/AlpacaTrading/security/advisories/new) for this repository. Private reporting was verified enabled on 2026-11-04. Do not open a public issue or pull request with vulnerability details.
+
+If the private-report form is unavailable, do not disclose details publicly. You may open an issue asking @mickpletcher only to restore a private reporting route, without describing the vulnerability. Wait for a confirmed private route before sharing evidence.
 
 Include the affected component, reproduction conditions, impact, and the smallest proof needed to confirm the problem. Do not include real API keys, account identifiers, private trading data, or other credentials.
 
-The maintainer will review the report, determine severity and scope, and coordinate disclosure after a fix is available.
+The maintainer reviews reports, assesses severity and scope, and coordinates disclosure when a fix is available. No response deadline or guaranteed fix date is promised. Routine bugs and usage questions belong in the routes in [SUPPORT.md](SUPPORT.md).
 
 ## System and Scope
 
@@ -71,3 +75,5 @@ These exclusions do not apply when the behavior also exposes secrets, corrupts p
 Current known defects and operating restrictions are maintained in `ISSUES.md`, `TECH-DEBT.md`, and `OPERATIONS.md`. A documented limitation is not automatically an accepted security risk.
 
 The repository defaults to paper trading, keeps the journal on loopback, uses local ignored runtime state, and runs credential-free automated tests. Operators must still supervise paper-order tools as documented in `OPERATIONS.md`.
+
+<!-- markdownlint-enable MD013 -->

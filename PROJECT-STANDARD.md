@@ -29,6 +29,11 @@
 | Resolved history | `upgrades/README.md` | Pre-existing applied-upgrade history |
 | Development rules | `PROJECT-STANDARD.md` | This file |
 | Agent rules | `AGENTS.md` | Root authority; other instruction files are pointers |
+| Contribution process | `CONTRIBUTING.md` | Community and accessibility authority |
+| Community conduct | `CODE_OF_CONDUCT.md` | Community and accessibility authority |
+| Accessibility | `ACCESSIBILITY.md` | Community and accessibility authority |
+| Support | `SUPPORT.md` | Community and accessibility authority |
+| Security policy | `SECURITY.md` | Community and accessibility authority |
 
 The machine-readable mapping in `.docs-authority.json` must agree with this table.
 

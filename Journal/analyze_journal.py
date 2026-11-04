@@ -108,18 +108,25 @@ def build_html_report(summary: dict[str, object]) -> str:
 <html lang=\"en\">
 <head>
   <meta charset=\"utf-8\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
   <title>Trading Journal Report</title>
   <style>
-    body {{ font-family: Segoe UI, Arial, sans-serif; margin: 2rem; background: #f5f7fa; color: #1f2933; }}
+    body {{ font-family: Segoe UI, Arial, sans-serif; margin: clamp(0.5rem, 4vw, 2rem); background: #f5f7fa; color: #1f2933; }}
+    main {{ overflow-wrap: anywhere; }}
     h1 {{ margin-bottom: 0.25rem; }}
-    .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }}
+    .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1rem; margin: 1.5rem 0; }}
     .card {{ background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08); }}
     table {{ width: 100%; border-collapse: collapse; background: white; }}
     th, td {{ border: 1px solid #d2d6dc; padding: 0.75rem; text-align: left; }}
+    .table-wrap {{ overflow-x: auto; }}
+    .table-wrap:focus-visible {{ outline: 3px solid #185abc; outline-offset: 3px; }}
+    caption {{ text-align: left; font-weight: bold; padding: 0.75rem 0; }}
+    td {{ overflow-wrap: anywhere; }}
     th {{ background: #e5eef7; }}
   </style>
 </head>
 <body>
+<main>
   <h1>Trading Journal Summary</h1>
   <p>Source file: {escape(str(TRADES_PATH.name))}</p>
   <div class=\"grid\">
@@ -132,23 +139,27 @@ def build_html_report(summary: dict[str, object]) -> str:
     <div class=\"card\"><strong>Best Symbol</strong><br>{escape(best_symbol_name)} ({best_symbol_value:.2f})</div>
     <div class=\"card\"><strong>Worst Symbol</strong><br>{escape(worst_symbol_name)} ({worst_symbol_value:.2f})</div>
   </div>
+  <div class=\"table-wrap\" role=\"region\" aria-label=\"Trade records, scroll horizontally if needed\" tabindex=\"0\">
   <table>
+    <caption>Recorded trades and notes</caption>
     <thead>
       <tr>
-        <th>Date</th>
-        <th>Symbol</th>
-        <th>Side</th>
-        <th>Qty</th>
-        <th>Entry Price</th>
-        <th>Exit Price</th>
-        <th>P&amp;L</th>
-        <th>Notes</th>
+        <th scope=\"col\">Date</th>
+        <th scope=\"col\">Symbol</th>
+        <th scope=\"col\">Side</th>
+        <th scope=\"col\">Qty</th>
+        <th scope=\"col\">Entry Price</th>
+        <th scope=\"col\">Exit Price</th>
+        <th scope=\"col\">P&amp;L</th>
+        <th scope=\"col\">Notes</th>
       </tr>
     </thead>
     <tbody>
       {''.join(rows)}
     </tbody>
   </table>
+  </div>
+</main>
 </body>
 </html>
 """

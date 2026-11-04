@@ -201,6 +201,10 @@ The folders are separate tools. The repository is not one installable applicatio
 - [Future upgrades](FUTURE-UPGRADES.md)
 - [Development rules](PROJECT-STANDARD.md)
 
+## Community and Accessibility
+
+Contributions, questions, and accessibility reports are welcome. Read the [contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md), [support routes](SUPPORT.md), and [accessibility statement](ACCESSIBILITY.md). Use the [issue chooser](https://github.com/mickpletcher/AlpacaTrading/issues/new/choose) or a blank issue if a form is a barrier. Suspected vulnerabilities belong in the private [security reporting process](SECURITY.md). Never publish credentials or private trading records.
+
 ## Development Workflow
 
 Non-trivial changes use a numbered folder under `specs/` containing requirements, a technical specification, a plan, and tasks. Runtime changes must update tests and the affected living documentation. See [PROJECT-STANDARD.md](PROJECT-STANDARD.md) for the complete rules.

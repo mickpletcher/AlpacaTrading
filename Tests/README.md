@@ -147,6 +147,33 @@ Connectivity proves only that the credentials and endpoint respond. It does not 
 | RSI and MACD bot | `Tests/test_execution_surfaces.py`, `Tests/test_trading_safety.py` | Paper-only dry run and log review |
 | BTC executor | `Tests/test_btc_signal_executor.py`, `Tests/test_trading_safety.py` | Use fake clients by default; paper integration requires dedicated credentials |
 
+## Community and Accessibility Validation
+
+Community policy and issue-form checks, journal structure/contrast checks, and generated-report checks run in the normal pytest suite. They use no credentials. They do not prove screen-reader support or full WCAG conformance.
+
+For browser validation, install Node.js 22 or newer and the pinned test-only packages, then run from the repository root:
+
+```powershell
+npm ci --prefix Tests/browser --ignore-scripts
+Push-Location Tests/browser
+npx --no-install playwright install chromium
+Pop-Location
+python Tests/browser/generate_reports.py --output Tests/browser/.reports
+npm --prefix Tests/browser test
+```
+
+The browser suite uses mocked requests and synthetic reports, with no journal server or Alpaca connection. It checks keyboard tabs and focus, save failure/retry, repeated submission, delete failure/cancellation, overlapping responses, clipboard fallback, 320 CSS-pixel reflow, reduced motion, and axe WCAG A/AA rules on the journal and three generated reports. The existing required `python-quality` CI job runs this suite, so a browser failure fails that check. Dependencies and generated fixtures remain under the ignored test-tool directories.
+
+A 320 CSS-pixel viewport approximates the layout width at 400 percent zoom on a 1280-pixel viewport; it is not a real zoom or assistive-technology test. Before claiming broader support, manually check actual browser zoom, text resizing, keyboard focus appearance, screen-reader announcements and reading order, high-contrast settings, and the intended browser/OS combinations. Include populated, empty, error, repeated, and cancelled flows. Use a temporary journal database and synthetic rows only.
+
+The DOM-only subset can run without a browser:
+
+```powershell
+npm --prefix Tests/browser run test:dom
+```
+
+See [ACCESSIBILITY.md](../ACCESSIBILITY.md) for reporting and known scope limits. Do not claim an unexecuted browser or assistive-technology check passed.
+
 ## Dependency Validation
 
 ```powershell
@@ -180,7 +207,7 @@ pwsh -NoProfile -File .\scripts\Update-PythonLock.ps1
 - Distributed webhook rate limiting and replay storage are not tested because the service is currently single-process.
 - The fixed reproducible evaluator covers one EMA strategy and one synthetic daily dataset. Other strategy backtests still use their existing data sources and assumptions.
 - The RSI plus MACD suite does not yet cover the complete entry, protective-stop, cancellation, exit, partial-fill, and recovery lifecycle. See BUG-007.
-- The journal suite does not yet include stored HTML injection regression cases. See BUG-009.
+- Journal DOM/report checks exercise literal stored text, but complete server limits, Content Security Policy, and end-to-end security validation remain open under BUG-009.
 - Coverage thresholds are repository-wide starting points. Safety-critical order lifecycle paths still need focused regression coverage as defects are fixed.
 
 <!-- markdownlint-enable MD013 MD024 MD060 -->

@@ -11,9 +11,11 @@ Technical debt is known engineering work that is not necessarily a current behav
 **Severity:** Medium
 **Area:** PowerShell quality
 
-CI blocks analyzer errors but allows warnings. The current assessment found 171 warnings and 3 informational findings. Most warnings are `Write-Host` style findings, but the set also includes empty catches and suspicious null comparisons.
+CI blocks analyzer errors but allows warnings. The September 2026 full assessment found 171 warnings and 3 informational findings. These are historical counts; consult the current pull request or CI run for a new execution. Most warnings are `Write-Host` style findings, but the set also includes empty catches and suspicious null comparisons.
 
 **Recommended resolution:** Review correctness-related warnings first, create an approved baseline for intentional console output, and make CI reject new unreviewed warnings.
+
+The community and accessibility change reviewed this debt without changing PowerShell behavior or the analyzer gate.
 
 Resolved TD-001, TD-002, TD-003, TD-005, and TD-007 are recorded under Upgrade 004 in `upgrades/README.md`. Resolved TD-006 and TD-009 are recorded under Upgrade 005.
 Resolved TD-008 is recorded under Upgrade 006.
