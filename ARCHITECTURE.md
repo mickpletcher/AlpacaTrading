@@ -76,7 +76,7 @@ Evidence: `src/Alpaca.Auth/Alpaca.Auth.psm1`, `Alpaca/circuit_breaker.py`, `rsi_
 
 ## Significant Dependencies
 
-The primary Python dependencies are `alpaca-py`, pandas, NumPy, requests, Flask, FastAPI, backtesting.py, Backtrader, and yfinance. `requirements.lock.txt` locks the full Python dependency graph for Python 3.13 development, CI, and releases. PowerShell validation uses Pester and PSScriptAnalyzer installed by CI.
+The primary Python dependencies are `alpaca-py`, pandas, NumPy, requests, Flask, FastAPI, backtesting.py, Backtrader, and yfinance. `requirements.lock.txt` locks the full Python dependency graph for Python 3.13 development, CI, and releases. PowerShell validation uses Pester and PSScriptAnalyzer installed by CI. Direct versions shared by component manifests must match the root manifest and the common lock; `Tests/test_dependency_compatibility.py` enforces that agreement and exercises the real indicator and plotting dependencies offline.
 
 Evidence: `requirements.txt`, `rsi_macd_bot/requirements.txt`, `btc-signal-executor/requirements.txt`, `.github/workflows/ci.yml`.
 

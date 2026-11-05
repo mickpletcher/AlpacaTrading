@@ -11,6 +11,18 @@
 **Basis:** Local repository inspection, current Python and PowerShell validation, documentation checks, and live GitHub readback for CI, branches, merge settings, branch protection, releases, and security alerts.
 **Assessed by:** Agent
 
+## Scoped Dependency Assessment: 2026-11-05
+
+**Base:** `d4029f2` (`main`). **Scope:** [specification 008](../specs/008-dependency-consolidation/spec.md), not a new full trading or security assessment.
+
+The sixteen remaining remote branches are dependency updates. The [source inventory](../specs/008-dependency-consolidation/source-branches.json) records their heads and PRs. Combining them requires aligning pandas and dotenv across manifests, refreshing FastAPI and Pydantic in the common lock, and resolving two incompatible transitive pins. Pydantic 2.14.2 requires pydantic-core 2.50.2, superseding the isolated 2.49.0 update. yfinance 1.2.1 is the smallest compatible companion update for curl-cffi 0.16.3. NumPy 2.2.6 remains unchanged for pandas-ta/numba compatibility. FastAPI adds its required opentelemetry-api dependency without adding an exporter or enabling telemetry configuration.
+
+The Python 3.13 lock was regenerated with the targeted upgrades, preserving the original verified colorama and tzdata blocks needed on Windows. The upstream Action tags match their new immutable SHA references. Repository policy tests retain coverage, hash-install, and pinned-module requirements. New offline tests detect stale manifest-only updates and exercise actual RSI/MACD calculations, backtesting.py/Bokeh reports, and Pillow serialization.
+
+Local validation on Python 3.13.5: compile checks and pip check passed; full pytest passed 112 tests with 3 missing-credential skips and 58.26 percent coverage (exit 0). Forty-eight dependency/resource warnings include upstream pandas 4 migration warnings; future pandas 4 support is not established. The existing journal DOM suite and JavaScript syntax checks passed. These results do not establish external market-data behavior or broker acceptance. No account requests or orders were made.
+
+Final exact-head hosted CI, Windows hash-install, browser, PowerShell, documentation, CodeQL, merge, and remote-branch deletion evidence belongs in the integration PR. Local PowerShell and real Chromium were not executed. Existing BUG-007 through BUG-009 remain open.
+
 ## Scoped Community and Accessibility Assessment: 2026-11-04
 
 **Base:** `2a415e13bbc3fd48c48279edbe74e02c642d5ecf` (`main`). **Scope:** [specification 007](../specs/007-community-accessibility/spec.md), not a new full security or trading assessment.
