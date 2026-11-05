@@ -1,0 +1,118 @@
+{
+  "base_main": "d4029f2acc31a4ea160b493a525ec4a3eea76924",
+  "observed_at": "2026-11-05T02:01:00Z",
+  "branches": [
+    {
+      "branch": "dependabot/github_actions/actions/setup-python-7.1.0",
+      "source_head": "9335c5447b3c4ecc796f263975a3886c4395dc41",
+      "pull_request": 35,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/35",
+      "integration": "Upstream version tag SHA verified; update policy regression assertion to the new immutable reference."
+    },
+    {
+      "branch": "dependabot/github_actions/actions/upload-artifact-7.0.2",
+      "source_head": "d3eab4c87c30e6ea082b39b1deeadeecf8a9bdab",
+      "pull_request": 28,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/28",
+      "integration": "Upstream version tag SHA verified; update policy regression assertion to the new immutable reference."
+    },
+    {
+      "branch": "dependabot/pip/btc-signal-executor/fastapi-0.162.0",
+      "source_head": "828c930e61247e289687236ec6b5c181727cceba",
+      "pull_request": 40,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/40",
+      "integration": "Regenerate shared lock; the source branch only changed the component manifest."
+    },
+    {
+      "branch": "dependabot/pip/btc-signal-executor/pydantic-2.14.2",
+      "source_head": "f026bf62b4db697e153d6580a218347f9f30a771",
+      "pull_request": 41,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/41",
+      "integration": "Regenerate shared lock; the source branch only changed the component manifest."
+    },
+    {
+      "branch": "dependabot/pip/btc-signal-executor/python-dotenv-1.2.4",
+      "source_head": "d9695a8fc29b6c9d3b98fdee377b3d2b072c3690",
+      "pull_request": 20,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/20",
+      "integration": "Duplicate of PR 27; verify python-dotenv 1.2.4 in all manifests and lock."
+    },
+    {
+      "branch": "dependabot/pip/certifi-2026.10.18",
+      "source_head": "22cadd2b7ad95b28a961365e83150706ae1b388a",
+      "pull_request": 38,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/38",
+      "integration": "Integrate the version update and validate the combined lock."
+    },
+    {
+      "branch": "dependabot/pip/curl-cffi-0.16.3",
+      "source_head": "fd9756c8a6abe101a823b8abe5b0cb33c2a1e86d",
+      "pull_request": 25,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/25",
+      "integration": "Requires companion yfinance 1.2.1 update; yfinance 1.2.0 excludes curl-cffi 0.16.3."
+    },
+    {
+      "branch": "dependabot/pip/msgpack-1.2.3",
+      "source_head": "32607d642da6e7e9990d416c059df6ea4ae93e35",
+      "pull_request": 22,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/22",
+      "integration": "Integrate the version update and validate the combined lock."
+    },
+    {
+      "branch": "dependabot/pip/pillow-13.0.0",
+      "source_head": "fad9ec7910f04a9170583f7569dec7ab96b93ec5",
+      "pull_request": 33,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/33",
+      "integration": "Integrate the version update and validate the combined lock."
+    },
+    {
+      "branch": "dependabot/pip/pydantic-core-2.49.0",
+      "source_head": "ca98c8268d7f9bdd88c3383a0bebe1d0ba2a8855",
+      "pull_request": 26,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/26",
+      "integration": "Superseded by pydantic-core 2.50.2, required exactly by Pydantic 2.14.2 from PR 41."
+    },
+    {
+      "branch": "dependabot/pip/pytest-9.1.1",
+      "source_head": "87d804f6f8f92da54e99a2561755b15d324172ee",
+      "pull_request": 24,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/24",
+      "integration": "Integrate the version update and validate the combined lock."
+    },
+    {
+      "branch": "dependabot/pip/python-dotenv-1.2.4",
+      "source_head": "af57c9bc363aec9a323ed3f8f1667677360fb1f4",
+      "pull_request": 27,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/27",
+      "integration": "Integrate the version update and validate the combined lock."
+    },
+    {
+      "branch": "dependabot/pip/rsi_macd_bot/pandas-3.1.0",
+      "source_head": "636c870b888dc65b3a7ea611b9811aab5e390417",
+      "pull_request": 36,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/36",
+      "integration": "Align root pandas pin to 3.1.0 with the RSI bot pin and regenerate lock."
+    },
+    {
+      "branch": "dependabot/pip/rsi_macd_bot/python-dotenv-1.2.4",
+      "source_head": "56bdc9abf60f9e161592455c51f8b9a972dd4896",
+      "pull_request": 23,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/23",
+      "integration": "Duplicate of PR 27; verify python-dotenv 1.2.4 in all manifests and lock."
+    },
+    {
+      "branch": "dependabot/pip/setuptools-84.1.0",
+      "source_head": "3c7987b68441ee28fbe6b85eda037542ba779640",
+      "pull_request": 34,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/34",
+      "integration": "Integrate the version update and validate the combined lock."
+    },
+    {
+      "branch": "dependabot/pip/tornado-6.6",
+      "source_head": "8d8c0b0a6eaeb7d3e62f15a4026a59a546cf3a0f",
+      "pull_request": 39,
+      "url": "https://github.com/mickpletcher/AlpacaTrading/pull/39",
+      "integration": "Integrate the version update and validate the combined lock."
+    }
+  ]
+}

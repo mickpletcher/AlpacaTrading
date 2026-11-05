@@ -185,6 +185,8 @@ python -m pip check
 
 Expected exit code: 0 in a clean supported environment. Dependabot and CodeQL provide hosted dependency and code scanning after changes reach GitHub.
 
+`Tests/test_dependency_compatibility.py` checks every direct manifest against the lock and runs real RSI/MACD calculations, a synthetic backtesting.py/Bokeh report, and a Pillow image round-trip. These checks prohibit socket connections and use temporary output files. A successful old-lock CI run is not evidence that a changed manifest version was exercised.
+
 When a direct requirement changes, regenerate the reviewed lock from Python 3.13:
 
 ```powershell

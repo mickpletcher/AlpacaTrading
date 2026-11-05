@@ -5,7 +5,7 @@
 alpaca-py==0.44.0
 
 # Core dataframe library used across backtests, indicators, journal summaries, and tests.
-pandas==3.0.6
+pandas==3.1.0
 
 # Numerical array support used by strategy calculations and synthetic tests.
 numpy==2.2.6
@@ -14,7 +14,7 @@ numpy==2.2.6
 requests==2.34.2
 
 # Loads local values from the root .env file.
-python-dotenv==1.2.3
+python-dotenv==1.2.4
 
 # Time zone support used by market time calculations and Alpaca workflows.
 pytz==2026.4
@@ -26,10 +26,10 @@ backtrader==1.9.78.123
 backtesting==0.6.6
 
 # Yahoo Finance data client used by Backtesting/backtest.py.
-yfinance==1.2.0
+yfinance==1.2.1
 
 # Flask web framework used by the journal web application.
 Flask==3.1.3
 
 # Test runner used for strategy logic tests and Alpaca connectivity tests.
-pytest==9.0.3
+pytest==9.1.1
