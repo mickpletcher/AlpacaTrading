@@ -43,6 +43,12 @@ def test_issue_forms_have_valid_unique_fields_and_privacy_guidance():
             ids.append(element['id'])
             assert re.fullmatch(r'[A-Za-z0-9_-]+', element['id'])
             assert element['attributes']['label'].strip()
+            description = element['attributes'].get('description')
+            if 'description' in element['attributes']:
+                assert isinstance(description, str) and description.strip(), (
+                    f"{filename}: {element['id']} has an empty field description; "
+                    "GitHub hides invalid issue forms from the chooser"
+                )
             assert isinstance(element['validations']['required'], bool)
         assert ids and len(ids) == len(set(ids))
         intro = form['body'][0]['attributes']['value']

@@ -23,7 +23,7 @@ body:
   id: expected
   attributes:
     label: Expected behavior
-    description: ''
+    description: Describe what you expected to happen.
   validations:
     required: true
 - type: textarea

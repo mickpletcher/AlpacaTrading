@@ -9,14 +9,14 @@ body:
   id: problem
   attributes:
     label: Problem or intended task
-    description: ''
+    description: Describe the task you want to complete and the limitation you encountered.
   validations:
     required: true
 - type: textarea
   id: proposal
   attributes:
     label: Proposed improvement
-    description: ''
+    description: Explain the suggested change and how it would help.
   validations:
     required: true
 - type: textarea

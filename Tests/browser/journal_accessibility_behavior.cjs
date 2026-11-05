@@ -73,6 +73,151 @@ const wait = () => new Promise(resolve => setTimeout(resolve, 80));
     await w.copyPrompt(); await wait();
     assert.equal(d.activeElement.id, 'ai-prompt');
     assert.match(d.querySelector('#toast').textContent, /Clipboard is unavailable/);
+    // Review regressions use controlled completion order, not timing guesses.
+    const regressions = [];
+    async function regression(name, check) {
+      try { await check(); console.log(`PASS review regression: ${name}`); }
+      catch (error) { regressions.push(`${name}: ${error.message}`); }
+    }
+    await regression('offscreen save error is revealed without moving focus', async () => {
+      w.switchTab('log');
+      const status = d.querySelector('#toast');
+      const originalRect = status.getBoundingClientRect;
+      let scrolled = false;
+      status.getBoundingClientRect = () => ({ top: -500, bottom: -450 });
+      status.scrollIntoView = () => { scrolled = true; };
+      d.querySelector('#f-ticker').value = 'SAMPLE';
+      d.querySelector('#f-entry').value = '10';
+      d.querySelector('[type="submit"]').focus();
+      failSave = true; submit(); await wait(); await wait();
+      status.getBoundingClientRect = originalRect;
+      assert.equal(scrolled, true);
+      assert.equal(d.activeElement, d.querySelector('[type="submit"]'));
+      assert.equal(status.getAttribute('role'), 'status');
+      assert.equal(status.getAttribute('aria-live'), 'polite');
+    });
+    await regression('save failure respects navigation to another panel', async () => {
+      w.switchTab('log');
+      const status = d.querySelector('#toast');
+      const originalRect = status.getBoundingClientRect;
+      let scrolled = false;
+      status.getBoundingClientRect = () => ({ top: -500, bottom: -450 });
+      status.scrollIntoView = () => { scrolled = true; };
+      submit(); w.switchTab('ai'); d.querySelector('#tab-ai').focus();
+      await wait(); await wait();
+      status.getBoundingClientRect = originalRect;
+      assert.equal(scrolled, false);
+      assert.equal(d.activeElement.id, 'tab-ai');
+    });
+    const originalFetch = w.fetch;
+    for (const [loader, url] of [['loadTrades', '/api/trades'], ['loadStats', '/api/stats']]) {
+      await regression(`${loader} ignores stale failures`, async () => {
+        let rejectOld, requests = 0;
+        w.fetch = (requested, options) => {
+          if (requested === url && ++requests === 1) return new Promise((resolve, reject) => { rejectOld = reject; });
+          return Promise.resolve({ ok: true, json: async () => url.endsWith('trades') ? [] : { message: 'Newest stats' } });
+        };
+        try {
+          const old = w[loader]();
+          await w[loader]();
+          w.toast('Latest operation succeeded.'); await wait();
+          rejectOld(new Error('Old request failed'));
+          await old; await wait();
+          assert.equal(d.querySelector('#toast').textContent, 'Latest operation succeeded.');
+        } finally { w.fetch = originalFetch; }
+      });
+    }
+    for (const [loader, url] of [['loadTrades', '/api/trades'], ['loadStats', '/api/stats']]) {
+      await regression(`${loader} suppresses a queued error after a newer read`, async () => {
+        const originalTimer = w.setTimeout, originalClear = w.clearTimeout;
+        const callbacks = [];
+        w.setTimeout = callback => { callbacks.push(callback); return callbacks.length; };
+        w.clearTimeout = () => {};
+        let requests = 0;
+        w.fetch = async () => ({ ok: ++requests > 1, json: async () => url.endsWith('trades') ? [] : { message: 'Latest stats' } });
+        try {
+          await w[loader]();
+          await w[loader]();
+          d.querySelector('#toast').textContent = 'Newer status';
+          callbacks.forEach(callback => callback());
+          assert.equal(d.querySelector('#toast').textContent, 'Newer status');
+        } finally { w.setTimeout = originalTimer; w.clearTimeout = originalClear; w.fetch = originalFetch; }
+      });
+    }
+    await regression('delete refresh preserves newly selected focus', async () => {
+      rows = originalRows; failHistory = false;
+      w.switchTab('trades'); await w.loadTrades();
+      const button = d.querySelector('[data-trade-id]'); button.focus();
+      let releaseRefresh, markRefresh;
+      const refreshStarted = new Promise(resolve => { markRefresh = resolve; });
+      w.fetch = (url, options) => {
+        if (url === '/api/trades' && !options) return new Promise(resolve => {
+          releaseRefresh = () => resolve({ ok: true, json: async () => [] });
+          markRefresh();
+        });
+        return originalFetch(url, options);
+      };
+      try {
+        const deleting = w.deleteTrade(1, button);
+        await refreshStarted;
+        const exportButton = d.querySelector('#panel-trades .btn-export');
+        exportButton.focus();
+        releaseRefresh(); await deleting; await wait();
+        assert.equal(d.activeElement, exportButton);
+      } finally { w.fetch = originalFetch; }
+    });
+    await regression('delete refresh preserves focus on a surviving row action', async () => {
+      const survivor = { ...originalRows[0], id: 2, ticker: 'SURVIVOR' };
+      rows = [...originalRows, survivor]; failHistory = false;
+      w.switchTab('trades'); await w.loadTrades();
+      const button = d.querySelector('[data-trade-id="1"]'); button.focus();
+      let releaseRefresh, markRefresh;
+      const refreshStarted = new Promise(resolve => { markRefresh = resolve; });
+      w.fetch = (url, options) => {
+        if (url === '/api/trades/1' && options?.method === 'DELETE') {
+          rows = [survivor];
+          return Promise.resolve({ ok: true, json: async () => ({ status: 'deleted' }) });
+        }
+        if (url === '/api/trades' && !options) return new Promise(resolve => {
+          releaseRefresh = () => resolve({ ok: true, json: async () => [survivor] });
+          markRefresh();
+        });
+        return originalFetch(url, options);
+      };
+      try {
+        const deleting = w.deleteTrade(1, button);
+        await refreshStarted;
+        d.querySelector('[data-trade-id="2"]').focus();
+        releaseRefresh(); await deleting; await wait();
+        assert.equal(d.activeElement, d.querySelector('[data-trade-id="2"]'));
+        assert.equal(d.activeElement.isConnected, true);
+      } finally { w.fetch = originalFetch; }
+    });
+    await regression('superseded delete refresh cannot overwrite a newer read failure', async () => {
+      rows = originalRows; failHistory = false;
+      w.switchTab('trades'); await w.loadTrades();
+      const button = d.querySelector('[data-trade-id="1"]'); button.focus();
+      let rejectRefresh, markRefresh, reads = 0;
+      const refreshStarted = new Promise(resolve => { markRefresh = resolve; });
+      w.fetch = (url, options) => {
+        if (url === '/api/trades' && !options) {
+          if (++reads === 1) return new Promise((resolve, reject) => { rejectRefresh = reject; markRefresh(); });
+          return Promise.resolve({ ok: false });
+        }
+        return originalFetch(url, options);
+      };
+      try {
+        const deleting = w.deleteTrade(1, button);
+        await refreshStarted;
+        await w.loadTrades(); await wait();
+        const newerError = d.querySelector('#toast').textContent;
+        assert.match(newerError, /Could not load trade history/);
+        rejectRefresh(new Error('Superseded refresh failed'));
+        await deleting; await wait();
+        assert.equal(d.querySelector('#toast').textContent, newerError);
+      } finally { w.fetch = originalFetch; }
+    });
+    assert.deepEqual(regressions, [], 'Review findings must stay fixed');
     console.log('PASS: tab keys/state, save error preservation, retry, duplicate suppression, focus, delete cancel/confirm and refresh failure, history error, literal text, prompt generation, clipboard fallback.');
   } finally { dom.window.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

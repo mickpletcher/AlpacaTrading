@@ -151,6 +151,8 @@ Connectivity proves only that the credentials and endpoint respond. It does not 
 
 Community policy and issue-form checks, journal structure/contrast checks, and generated-report checks run in the normal pytest suite. They use no credentials. They do not prove screen-reader support or full WCAG conformance.
 
+Issue-form descriptions must be nonempty strings when present. After issue-form changes reach the default branch, verify every expected form in GitHub's issue chooser and open each form without submitting it. A 100 percent community profile or a green Issue templates checklist entry does not prove that every form is valid; GitHub can hide invalid forms while still recognizing the valid ones.
+
 For browser validation, install Node.js 22 or newer and the pinned test-only packages, then run from the repository root:
 
 ```powershell
@@ -162,7 +164,7 @@ python Tests/browser/generate_reports.py --output Tests/browser/.reports
 npm --prefix Tests/browser test
 ```
 
-The browser suite uses mocked requests and synthetic reports, with no journal server or Alpaca connection. It checks keyboard tabs and focus, save failure/retry, repeated submission, delete failure/cancellation, overlapping responses, clipboard fallback, 320 CSS-pixel reflow, reduced motion, and axe WCAG A/AA rules on the journal and three generated reports. The existing required `python-quality` CI job runs this suite, so a browser failure fails that check. Dependencies and generated fixtures remain under the ignored test-tool directories.
+The browser suite uses mocked requests and synthetic reports, with no journal server or Alpaca connection. It checks keyboard tabs and focus, save failure/retry and narrow-screen error visibility, repeated submission, delete failure/cancellation and focus during delayed refresh, overlapping successful and failed responses, clipboard fallback, 320 CSS-pixel reflow, reduced motion, and axe WCAG A/AA rules on the journal and three generated reports. The DOM subset also checks navigation during pending saves and invalidation of delayed error announcements. The existing required `python-quality` CI job runs this suite, so a browser failure fails that check. Dependencies and generated fixtures remain under the ignored test-tool directories.
 
 A 320 CSS-pixel viewport approximates the layout width at 400 percent zoom on a 1280-pixel viewport; it is not a real zoom or assistive-technology test. Before claiming broader support, manually check actual browser zoom, text resizing, keyboard focus appearance, screen-reader announcements and reading order, high-contrast settings, and the intended browser/OS combinations. Include populated, empty, error, repeated, and cancelled flows. Use a temporary journal database and synthetic rows only.
 
